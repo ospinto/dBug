@@ -327,6 +327,8 @@ class dBug {
 		echo imagesy($var).$this->closeTDRow();
 		$this->makeTDHeader("resource","Colors");
 		echo imagecolorstotal($var).$this->closeTDRow();
+		/*$this->makeTDHeader("resource","Image");
+		echo '<img src="data:image/jpeg;base64,'imagecolorstotal($var).$this->closeTDRow();*/
 		echo "</table>";
 	}
 	
