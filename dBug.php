@@ -169,7 +169,9 @@ class dBug {
 	
 	//if variable is a NULL type
 	function varIsNULL() {
+		$this->makeTableHeader("false","NULL");
 		echo "NULL";
+		echo "</table>";
 	}
 	
 	//if variable is a boolean type
@@ -488,7 +490,8 @@ class dBug {
 				.dBug_objectHeader,
 				.dBug_resourceHeader,
 				.dBug_resourceCHeader,
-				.dBug_xmlHeader 
+				.dBug_xmlHeader,
+				.dBug_falseHeader
 					{ font-weight:bold; color:#FFFFFF; cursor:pointer; }
 				
 				.dBug_arrayKey,
@@ -525,6 +528,11 @@ class dBug {
 				table.dBug_xml td { background-color:#FFFFFF; }
 				table.dBug_xml td.dBug_xmlHeader { background-color:#AAAAAA; }
 				table.dBug_xml td.dBug_xmlKey { background-color:#DDDDDD; }
+				/* FALSE */
+				table.dBug_false { background-color:#CB0101; }
+				table.dBug_false td { background-color:#FFFFFF; }
+				table.dBug_false td.dBug_falseHeader { background-color:#F2054C; }
+				table.dBug_false td.dBug_falseKey { background-color:#DDDDDD; }
 			</style>
 SCRIPTS;
 	}
