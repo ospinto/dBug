@@ -175,7 +175,7 @@ class dBug {
 	//if variable is a NULL type
 	function varIsNULL() {
 		$this->makeTableHeader("false","NULL");
-		echo "NULL";
+		//echo "NULL";
 		echo "</table>";
 	}
 	
@@ -224,6 +224,8 @@ class dBug {
 	
 	//if variable is an object type
 	function varIsObject($var) {
+		if($this->varIsDBObject($var))return 1;
+		
 		$var_ser = serialize($var);
 		array_push($this->arrHistory, $var_ser);
 		$this->makeTableHeader("object","object");
@@ -286,7 +288,57 @@ class dBug {
 		}
 		echo $this->closeTDRow()."</table>\n";
 	}
-
+	
+	function varIsDBObject($var) {
+		if($var instanceof SQLite3Result){
+			//$var=clone $var;
+			$structure=array();
+			$data=array();
+			$dbtype="";
+			$count=$var->numColumns();
+			for($i=0;$i<$count;$i++){
+				$structure[$i]=array();
+				$structure[$i][0]=$var->columnName($i);
+				$structure[$i][1]=$var->columnType($i);
+			}
+			$var->reset();
+			while($res=$var->fetchArray(SQLITE3_NUM)){
+				$data[]=$res;
+			}
+			$var->reset();
+			$dbtype="SQLite3";
+			unset($var);
+			$this->renderDBData($dbtype,$structure,$data);
+			unset($data);
+			unset($structure);
+			unset($dbtype);
+			
+			return 1;
+		}
+		return 0;
+	}
+	function renderDBData($db,&$structure,&$data){
+		$this->makeTableHeader("database",$db." result",count($structure)+1);
+		echo "<tr><td class=\"dBug_databaseKey\">&nbsp;</td>";
+		foreach($structure as $field) {
+			echo '<td class="dBug_databaseKey"'.(isset($field[1])?' title="'.$field[1].'"':"").'>'.$field[0]."</td>";
+		}
+		echo "</tr>";
+		if(empty($data)){
+			echo "<tr><td class=\"dBug_resourceKey\" colspan=\"".(count($structure)+1)."\">[empty result]</td></tr>";
+		}else
+			foreach($data as $row) {
+				echo "<tr>\n";
+				echo "<td class=\"dBug_resourceKey\">".($i+1)."</td>"; 
+				for($k=0;$k<count($row);$k++) {
+					$fieldrow=($row[$k]==="") ? "[empty string]" : $row[$k];
+					echo "<td>".$fieldrow."</td>\n";
+				}
+				echo "</tr>\n";
+			}
+		echo "</table>";
+	}
+	
 	//if variable is a database resource type
 	function varIsDBResource($var,$db="mysql") {
 		if($db == "pgsql")
@@ -503,7 +555,8 @@ class dBug {
 				.dBug_resourceCHeader,
 				.dBug_xmlHeader,
 				.dBug_falseHeader,
-				.dBug_numericHeader
+				.dBug_numericHeader,
+				.dBug_databaseHeader
 					{ font-weight:bold; color:#FFFFFF; cursor:pointer; }
 				
 				.dBug_arrayKey,
@@ -549,7 +602,12 @@ class dBug {
 				table.dBug_numeric { background-color:#F9C007; }
 				table.dBug_numeric td { background-color:#FFFFFF; }
 				table.dBug_numeric td.dBug_numericHeader { background-color:#F2D904; }
-				table.dBug_numeric td.dBug_numericKey { background-color:#DDDDDD; }
+				/*table.dBug_numeric td.dBug_numericKey { background-color:#DDDDDD; }*/
+				/* database */
+				table.dBug_database { background-color:#8FB6E6 }
+				table.dBug_database td { background-color:#07DDF9; }
+				table.dBug_database td.dBug_databaseHeader { background-color:#07F7FB; }
+				table.dBug_database td.dBug_databaseKey { background-color:#AEF4F5; }
 			</style>
 SCRIPTS;
 	}
