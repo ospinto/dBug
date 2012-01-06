@@ -144,7 +144,8 @@ class dBug {
 
 	//check variable type
 	function checkType($var) {
-		switch(gettype($var)) {
+		$type=gettype($var);
+		switch($type) {
 			case "resource":
 				$this->varIsResource($var);
 				break;
@@ -153,6 +154,10 @@ class dBug {
 				break;
 			case "array":
 				$this->varIsArray($var);
+				break;
+			case "integer":
+			case "double":
+				$this->varIsNumeric($var,$type);
 				break;
 			case "NULL":
 				$this->varIsNULL();
@@ -171,6 +176,12 @@ class dBug {
 	function varIsNULL() {
 		$this->makeTableHeader("false","NULL");
 		echo "NULL";
+		echo "</table>";
+	}
+	
+	//if variable is a numeric type
+	function varIsNumeric($var,$type) {
+		$this->makeTableHeader("numeric",$type."(".$var.")");
 		echo "</table>";
 	}
 	
@@ -491,7 +502,8 @@ class dBug {
 				.dBug_resourceHeader,
 				.dBug_resourceCHeader,
 				.dBug_xmlHeader,
-				.dBug_falseHeader
+				.dBug_falseHeader,
+				.dBug_numericHeader
 					{ font-weight:bold; color:#FFFFFF; cursor:pointer; }
 				
 				.dBug_arrayKey,
@@ -533,6 +545,11 @@ class dBug {
 				table.dBug_false td { background-color:#FFFFFF; }
 				table.dBug_false td.dBug_falseHeader { background-color:#F2054C; }
 				table.dBug_false td.dBug_falseKey { background-color:#DDDDDD; }
+				/* numeric */
+				table.dBug_numeric { background-color:#F9C007; }
+				table.dBug_numeric td { background-color:#FFFFFF; }
+				table.dBug_numeric td.dBug_numericHeader { background-color:#F2D904; }
+				table.dBug_numeric td.dBug_numericKey { background-color:#DDDDDD; }
 			</style>
 SCRIPTS;
 	}
