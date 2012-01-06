@@ -290,10 +290,11 @@ class dBug {
 	}
 	
 	function varIsDBObject($var) {
+		$structure=array();
+		$data=array();
+		$retres=false;
 		if($var instanceof SQLite3Result){
 			//$var=clone $var;
-			$structure=array();
-			$data=array();
 			$dbtype="";
 			$count=$var->numColumns();
 			for($i=0;$i<$count;$i++){
@@ -309,16 +310,32 @@ class dBug {
 			$dbtype="SQLite3";
 			unset($var);
 			$this->renderDBData($dbtype,$structure,$data);
-			unset($data);
-			unset($structure);
-			unset($dbtype);
-			
-			return 1;
+			$retres=true;
 		}
-		return 0;
+		if($var instanceof PDOStatement){
+			//$var=clone $var;
+			$count=$var->columnCount();
+			$col=null;
+			for($i=0;$i<$count;$i++){
+				$col=$var->getColumnMeta(0);
+				$structure[$i]=array();
+				$structure[$i][0]=$col["name"];
+				$structure[$i][1]=(isset($col["driver:decl_type"])?(isset($col["len"])?"({$col["len"]})":"")."\n":"")."({$col["native_type"]})";
+			}
+			unset($col);
+			$data=$var->fetchAll();
+			$dbtype="PDOStatement";
+			unset($var);
+			$this->renderDBData($dbtype,$structure,$data);
+			$retres=true;
+		}
+		unset($dbtype);
+		unset($data);
+		unset($structure);
+		return $retres;
 	}
-	function renderDBData($db,&$structure,&$data){
-		$this->makeTableHeader("database",$db." result",count($structure)+1);
+	function renderDBData($objectType,&$structure,&$data){
+		$this->makeTableHeader("database",$objectType,count($structure)+1);
 		echo "<tr><td class=\"dBug_databaseKey\">&nbsp;</td>";
 		foreach($structure as $field) {
 			echo '<td class="dBug_databaseKey"'.(isset($field[1])?' title="'.$field[1].'"':"").'>'.$field[0]."</td>";
@@ -348,8 +365,8 @@ class dBug {
 		$arrFields = array("name","type","flags");	
 		$numrows=call_user_func($db."_num_rows",$var);
 		$numfields=call_user_func($db."_num_fields",$var);
-		$this->makeTableHeader("resource",$db." result",$numfields+1);
-		echo "<tr><td class=\"dBug_resourceKey\">&nbsp;</td>";
+		$this->makeTableHeader("database",$db." result",$numfields+1);
+		echo "<tr><td class=\"dBug_databaseKey\">&nbsp;</td>";
 		for($i=0;$i<$numfields;$i++) {
 			$field_header = "";
 			for($j=0; $j<count($arrFields); $j++) {
@@ -363,13 +380,13 @@ class dBug {
 				}
 			}
 			$field[$i]=call_user_func($db."_fetch_field",$var,$i);
-			echo "<td class=\"dBug_resourceKey\" title=\"".$field_header."\">".$field_name."</td>";
+			echo "<td class=\"dBug_databaseKey\" title=\"".$field_header."\">".$field_name."</td>";
 		}
 		echo "</tr>";
 		for($i=0;$i<$numrows;$i++) {
 			$row=call_user_func($db."_fetch_array",$var,constant(strtoupper($db)."_ASSOC"));
 			echo "<tr>\n";
-			echo "<td class=\"dBug_resourceKey\">".($i+1)."</td>"; 
+			echo "<td class=\"dBug_databaseKey\">".($i+1)."</td>"; 
 			for($k=0;$k<$numfields;$k++) {
 				$tempField=$field[$k]->name;
 				$fieldrow=$row[($field[$k]->name)];
