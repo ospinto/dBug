@@ -2,6 +2,8 @@
 /*********************************************************************************************************************\
  * LAST UPDATE
  * ============
+ * Sep 29, 2011 by maliayas
+ * July 25, 2011 by maliayas
  * March 22, 2007
  *
  *
@@ -96,12 +98,12 @@ class dBug {
 		
 		if(isset($arrFile)) {
 			$arrLines = file($arrFile["file"]);
-			$code = $arrLines[($arrFile["line"]-1)];
+			$code = @$arrLines[($arrFile["line"]-1)];
 	
 			//find call to dBug class
-			preg_match('/\bnew dBug\s*\(\s*(.+)\s*\);/i', $code, $arrMatches);
+			preg_match('/\bnew\s+dBug\s*\(\s*(.+?)\s*\)\s*;/i', $code, $arrMatches);
 			
-			return $arrMatches[1];
+			return @$arrMatches[1];
 		}
 		return "";
 	}
@@ -161,21 +163,26 @@ class dBug {
 				$this->varIsBoolean($var);
 				break;
 			default:
-				$var=($var=="") ? "[empty string]" : $var;
-				echo "<table cellspacing=0><tr>\n<td>".$var."</td>\n</tr>\n</table>\n";
+				$this->makeTableHeader('simpleVar',gettype($var));
+				$var=($var==="") ? "[empty string]" : $var;
+				//echo "<table cellspacing=0><tr>\n<td>".$var."</td>\n</tr>\n</table>\n";
+				echo '<tr><td>' . htmlspecialchars($var) . '</td></tr>';
+				echo "</table>";
+				
 				break;
 		}
 	}
 	
 	//if variable is a NULL type
 	function varIsNULL() {
-		echo "NULL";
+		$this->makeTableHeader('simpleVar',"null");
+		echo "</table>";
 	}
 	
 	//if variable is a boolean type
 	function varIsBoolean($var) {
-		$var=($var==1) ? "TRUE" : "FALSE";
-		echo $var;
+		$this->makeTableHeader('simpleVar',($var==1) ? "true" : "false");
+		echo "</table>";
 	}
 			
 	//if variable is an array type
@@ -199,7 +206,7 @@ class dBug {
 					$this->checkType($value);
 				else {
 					$value=(trim($value)=="") ? "[empty string]" : $value;
-					echo $value;
+					echo htmlspecialchars($value);
 				}
 				echo $this->closeTDRow();
 			}
@@ -232,7 +239,7 @@ class dBug {
 				}
 				if(in_array(gettype($value),$this->arrType))
 					$this->checkType($value);
-				else echo $value;
+				else echo htmlspecialchars($value);
 				echo $this->closeTDRow();
 			}
 			$arrObjMethods=get_class_methods(get_class($var));
@@ -478,21 +485,31 @@ class dBug {
 			</script>
 			
 			<style type="text/css">
-				table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml {
+				table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml,
+					table.dBug_simpleVar{
 					font-family:Verdana, Arial, Helvetica, sans-serif; color:#000000; font-size:12px;
+					margin-bottom: 4px;
 				}
 				
 				.dBug_arrayHeader,
 				.dBug_objectHeader,
 				.dBug_resourceHeader,
 				.dBug_resourceCHeader,
-				.dBug_xmlHeader 
+				.dBug_xmlHeader, 
+				.dBug_simpleVarHeader
 					{ font-weight:bold; color:#FFFFFF; cursor:pointer; }
 				
 				.dBug_arrayKey,
 				.dBug_objectKey,
+				.dBug_simpleVarKey, 
 				.dBug_xmlKey 
 					{ cursor:pointer; }
+					
+				/* simpleVar: null,boolean,string,integer,double etc... */
+				table.dBug_simpleVar { background-color:#006600; }
+				table.dBug_simpleVar td { background-color:#FFFFFF; }
+				table.dBug_simpleVar td.dBug_simpleVarHeader { background-color:#009900; }
+				table.dBug_simpleVar td.dBug_simpleVarKey { background-color:#CCFFCC; }
 					
 				/* array */
 				table.dBug_array { background-color:#006600; }
