@@ -148,27 +148,30 @@ class dBug {
 		switch($type) {
 			case "resource":
 				$this->varIsResource($var);
-				break;
+			break;
 			case "object":
 				$this->varIsObject($var);
-				break;
+			break;
 			case "array":
 				$this->varIsArray($var);
-				break;
+			break;
 			case "integer":
 			case "double":
 				$this->varIsNumeric($var,$type);
-				break;
+			break;
 			case "NULL":
 				$this->varIsNULL();
-				break;
+			break;
 			case "boolean":
 				$this->varIsBoolean($var);
-				break;
+			break;
+			case "string":
+				$this->varIsString($var);
+			break;
 			default:
 				$var=($var=="") ? "[empty string]" : $var;
 				echo "<table cellspacing=0><tr>\n<td>".$var."</td>\n</tr>\n</table>\n";
-				break;
+			break;
 		}
 	}
 	
@@ -182,6 +185,23 @@ class dBug {
 	//if variable is a numeric type
 	function varIsNumeric($var,$type) {
 		$this->makeTableHeader("numeric",$type."(".$var.")");
+		echo "</table>";
+	}
+	
+	//if variable is a string type
+	function varIsString($var){
+		if($var==""){
+			$this->makeTableHeader("string","empty string");
+			echo "</table>";
+			return;
+		}
+		$this->makeTableHeader("string","string (".strlen($var).")");
+		$lines=explode("\n",$var);
+		foreach($lines as $num=>$line){
+			$this->makeTDHeader("string",$num);
+			echo ($line==""?"[empty line]":$line);
+			$this->closeTDRow("string");
+		}
 		echo "</table>";
 	}
 	
@@ -625,6 +645,11 @@ class dBug {
 				table.dBug_database td { background-color:#07DDF9; }
 				table.dBug_database td.dBug_databaseHeader { background-color:#07F7FB; }
 				table.dBug_database td.dBug_databaseKey { background-color:#AEF4F5; }
+				/* string */
+				table.dBug_string { background-color:#556832 }
+				table.dBug_string td { background-color:#B3C520;}
+				table.dBug_string td.dBug_stringHeader { background-color:#808000; }
+				table.dBug_string td.dBug_stringKey { background-color:#96A428; }
 			</style>
 SCRIPTS;
 	}
