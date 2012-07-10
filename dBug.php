@@ -1,30 +1,5 @@
 <?php
 /*********************************************************************************************************************\
- * LAST UPDATE
- * ============
- * March 22, 2007
- *
- *
- * AUTHOR
- * =============
- * Kwaku Otchere 
- * ospinto@hotmail.com
- * 
- * Thanks to Andrew Hewitt (rudebwoy@hotmail.com) for the idea and suggestion
- * 
- * All the credit goes to ColdFusion's brilliant cfdump tag
- * Hope the next version of PHP can implement this or have something similar
- * I love PHP, but var_dump BLOWS!!!
- *
- * FOR DOCUMENTATION AND MORE EXAMPLES: VISIT http://dbug.ospinto.com
- *
- *
- * PURPOSE
- * =============
- * Dumps/Displays the contents of a variable in a colored tabular format
- * Based on the idea, javascript and css code of Macromedia's ColdFusion cfdump tag
- * A much better presentation of a variable's contents than PHP's var_dump and print_r functions
- *
  *
  * USAGE
  * =============
@@ -189,14 +164,15 @@ class dBug {
 	}
 	
 	//if variable is a string type
-	function varIsString($var){
+	function varIsString(&$var){
 		if($var==""){
 			$this->makeTableHeader("string","empty string");
 			echo "</table>";
 			return;
 		}
 		$this->makeTableHeader("string","string (".strlen($var).")");
-		$lines=explode("\n",$var);
+		$nv=htmlspecialchars($var);
+		$lines=explode("\n",$nv);
 		foreach($lines as $num=>$line){
 			$this->makeTDHeader("string",$num);
 			echo ($line==""?"[empty line]":$line);
@@ -206,13 +182,13 @@ class dBug {
 	}
 	
 	//if variable is a boolean type
-	function varIsBoolean($var) {
+	function varIsBoolean(&$var) {
 		$var=($var==1) ? "TRUE" : "FALSE";
 		echo $var;
 	}
 			
 	//if variable is an array type
-	function varIsArray($var) {
+	function varIsArray(&$var) {
 		$var_ser = serialize($var);
 		array_push($this->arrHistory, $var_ser);
 		
@@ -243,7 +219,7 @@ class dBug {
 	}
 	
 	//if variable is an object type
-	function varIsObject($var) {
+	function varIsObject(&$var) {
 		if($this->varIsDBObject($var))return 1;
 		
 		$var_ser = serialize($var);
@@ -285,7 +261,8 @@ class dBug {
 	function varIsResource($var) {
 		$this->makeTableHeader("resourceC","resource",1);
 		echo "<tr>\n<td>\n";
-		switch(get_resource_type($var)) {
+		$restype=get_resource_type($var);
+		switch($restype) {
 			case "fbsql result":
 			case "mssql result":
 			case "msql query":
@@ -293,17 +270,23 @@ class dBug {
 			case "sybase-db result":
 			case "sybase-ct result":
 			case "mysql result":
-				$db=current(explode(" ",get_resource_type($var)));
+				$db=current(explode(" ",$restype));
 				$this->varIsDBResource($var,$db);
-				break;
+			break;
 			case "gd":
 				$this->varIsGDResource($var);
-				break;
+			break;
 			case "xml":
 				$this->varIsXmlResource($var);
-				break;
+			break;
+			case "curl":
+				$this->varIsCurlEasyResource($var);
+			break;
+			/*case "curl_multi":
+				$this->varIsCurlMultiResource($var);
+			break;*/
 			default:
-				echo get_resource_type($var).$this->closeTDRow();
+				echo $restype.$this->closeTDRow();
 				break;
 		}
 		echo $this->closeTDRow()."</table>\n";
@@ -430,7 +413,12 @@ class dBug {
 		$this->makeTDHeader("resource","Colors");
 		echo imagecolorstotal($var).$this->closeTDRow();
 		/*$this->makeTDHeader("resource","Image");
-		echo '<img src="data:image/jpeg;base64,'imagecolorstotal($var).$this->closeTDRow();*/
+		touch('php://temp');
+		imagepng($var,'php://temp');
+		$img=file_get_contents('php://temp');
+		echo $img;
+		
+		echo '<img src="data:image/png;base64,'.base64_encode($img).'"/>'.$this->closeTDRow();*/
 		echo "</table>";
 	}
 	
@@ -469,6 +457,23 @@ class dBug {
 		}
 		
 		echo $this->closeTDRow()."</table>\n";
+		
+	}
+	
+	function varIsCurlEasyResource(&$var) {
+		$this->makeTableHeader("resource","curl easy handle",2);
+		$info=curl_getinfo($var);
+		foreach($info as $name=>&$piece){
+			if($piece){
+				$this->makeTDHeader("resource",$name);
+				echo $piece.$this->closeTDRow();
+			}
+		}
+		unset($info);
+		echo "</table>";
+		
+	}
+	function varIsCurlMultiResource(&$var) {
 		
 	}
 	
