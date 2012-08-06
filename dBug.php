@@ -2,7 +2,7 @@
 /*********************************************************************************************************************\
  * LAST UPDATE
  * ============
- * August 2nd, 2012
+ * August 6th, 2012
  *
  *
  * AUTHOR
@@ -483,9 +483,15 @@ class dBug {
 			</script>
 
 			<style type="text/css">
-				table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml {
-					font-family:Verdana, Arial, Helvetica, sans-serif; color:#000000; font-size:12px;
-				}
+				table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml
+					{ font-family:Verdana, Arial, Helvetica, sans-serif; color:#000000; font-size:12px; border-spacing:2px; display:table; border-collapse:separate; }
+
+				table.dBug_array td,
+				table.dBug_object td,
+				table.dBug_resource td,
+				table.dBug_resourceC td,
+				table.dBug_xml td
+					{ line-height:1.3; padding:3px; vertical-align:top; }
 
 				.dBug_arrayHeader,
 				.dBug_objectHeader,
