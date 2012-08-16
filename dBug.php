@@ -183,8 +183,9 @@ class dBug {
 	
 	//if variable is a boolean type
 	function varIsBoolean(&$var) {
-		$var=($var==1) ? "TRUE" : "FALSE";
+		$var?$this->makeTableHeader("numeric","boolean (TRUE)"):$this->makeTableHeader("false","boolean (FALSE)");
 		echo $var;
+		echo "</table>";
 	}
 			
 	//if variable is an array type
@@ -320,13 +321,15 @@ class dBug {
 			$count=$var->columnCount();
 			$col=null;
 			for($i=0;$i<$count;$i++){
-				$col=$var->getColumnMeta(0);
+				//$col=$var->getColumnMeta(0);
+				$col=$var->getColumnMeta($i);
 				$structure[$i]=array();
 				$structure[$i][0]=$col["name"];
 				$structure[$i][1]=(isset($col["driver:decl_type"])?(isset($col["len"])?"({$col["len"]})":"")."\n":"")."({$col["native_type"]})";
 			}
 			unset($col);
 			$data=$var->fetchAll();
+			$var->closeCursor();
 			$dbtype="PDOStatement";
 			unset($var);
 			$this->renderDBData($dbtype,$structure,$data);
@@ -337,7 +340,7 @@ class dBug {
 		unset($structure);
 		return $retres;
 	}
-	function renderDBData($objectType,&$structure,&$data){
+	function renderDBData(&$objectType,&$structure,&$data){
 		$this->makeTableHeader("database",$objectType,count($structure)+1);
 		echo "<tr><td class=\"dBug_databaseKey\">&nbsp;</td>";
 		foreach($structure as $field) {
@@ -347,9 +350,10 @@ class dBug {
 		if(empty($data)){
 			echo "<tr><td class=\"dBug_resourceKey\" colspan=\"".(count($structure)+1)."\">[empty result]</td></tr>";
 		}else
+			$i=0;
 			foreach($data as $row) {
 				echo "<tr>\n";
-				echo "<td class=\"dBug_resourceKey\">".($i+1)."</td>"; 
+				echo "<td class=\"dBug_resourceKey\">".(++$i)."</td>"; 
 				for($k=0;$k<count($row);$k++) {
 					$fieldrow=($row[$k]==="") ? "[empty string]" : $row[$k];
 					echo "<td>".$fieldrow."</td>\n";
