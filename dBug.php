@@ -2,6 +2,9 @@
 /*********************************************************************************************************************\
  * LAST UPDATE
  * ============
+ * Jan 25, 2012 by maliayas
+ * Sep 29, 2011 by maliayas
+ * July 25, 2011 by maliayas
  * March 22, 2007
  *
  *
@@ -96,12 +99,12 @@ class dBug {
 		
 		if(isset($arrFile)) {
 			$arrLines = file($arrFile["file"]);
-			$code = $arrLines[($arrFile["line"]-1)];
+			$code = @$arrLines[($arrFile["line"]-1)];
 	
 			//find call to dBug class
-			preg_match('/\bnew dBug\s*\(\s*(.+)\s*\);/i', $code, $arrMatches);
+			preg_match('/\bnew\s+dBug\s*\(\s*(.+?)\s*\)\s*;/i', $code, $arrMatches);
 			
-			return $arrMatches[1];
+			return @$arrMatches[1];
 		}
 		return "";
 	}
@@ -121,10 +124,10 @@ class dBug {
 	}
 	
 	//create the table row header
-	function makeTDHeader($type,$header) {
+	function makeTDHeader($type,$header, $title = '') {
 		$str_d = ($this->bCollapsed) ? " style=\"display:none\"" : "";
 		echo "<tr".$str_d.">
-				<td valign=\"top\" onClick='dBug_toggleRow(this)' class=\"dBug_".$type."Key\">".$header."</td>
+				<td valign=\"top\" onClick='dBug_toggleRow(this)' class=\"dBug_".$type."Key\"" . (! empty($title) ? ' title="' . htmlspecialchars($title) . '"' : '') . ">".$header."</td>
 				<td>";
 	}
 	
@@ -161,21 +164,26 @@ class dBug {
 				$this->varIsBoolean($var);
 				break;
 			default:
-				$var=($var=="") ? "[empty string]" : $var;
-				echo "<table cellspacing=0><tr>\n<td>".$var."</td>\n</tr>\n</table>\n";
+				$this->makeTableHeader('simpleVar',gettype($var));
+				$var=($var==="") ? "[empty string]" : $var;
+				//echo "<table cellspacing=0><tr>\n<td>".$var."</td>\n</tr>\n</table>\n";
+				echo '<tr><td>' . htmlspecialchars($var) . '</td></tr>';
+				echo "</table>";
+				
 				break;
 		}
 	}
 	
 	//if variable is a NULL type
 	function varIsNULL() {
-		echo "NULL";
+		$this->makeTableHeader('simpleVar',"null");
+		echo "</table>";
 	}
 	
 	//if variable is a boolean type
 	function varIsBoolean($var) {
-		$var=($var==1) ? "TRUE" : "FALSE";
-		echo $var;
+		$this->makeTableHeader('simpleVar',($var==1) ? "true" : "false");
+		echo "</table>";
 	}
 			
 	//if variable is an array type
@@ -199,7 +207,7 @@ class dBug {
 					$this->checkType($value);
 				else {
 					$value=(trim($value)=="") ? "[empty string]" : $value;
-					echo $value;
+					echo htmlspecialchars($value);
 				}
 				echo $this->closeTDRow();
 			}
@@ -216,32 +224,64 @@ class dBug {
 		$this->makeTableHeader("object","object");
 		
 		if(is_object($var)) {
-			$arrObjVars=get_object_vars($var);
-			foreach($arrObjVars as $key=>$value) {
-
-				$value=(!is_object($value) && !is_array($value) && trim($value)=="") ? "[empty string]" : $value;
-				$this->makeTDHeader("object",$key);
+			$varRef = new ReflectionObject($var);
+			
+			$props = $varRef->getProperties();
+			foreach($props as $prop) {
+				$prop->setAccessible(true);
+				$propValue = $prop->getValue($var);
+				$propName = $prop->getName();
+				$propModifiers = implode(' ', Reflection::getModifierNames($prop->getModifiers()));
+				$propAttr = $prop->isPublic() ? '+' : ($prop->isPrivate() ? '-' : '#');
+				$propAttr = '[' . $propAttr . ($prop->isStatic() ? 'S' : '') . '] ';
+				
+				$propValue=(gettype($propValue) == "string" && trim($propValue)==="") ? "[empty string]" : $propValue;
+				$this->makeTDHeader("object",$propAttr . $propName, $propModifiers);
 				
 				//check for recursion
-				if(is_object($value)||is_array($value)) {
-					$var_ser = serialize($value);
+				if(is_object($propValue)||is_array($propValue)) {
+					$var_ser = serialize($propValue);
 					if(in_array($var_ser, $this->arrHistory, TRUE)) {
-						$value = (is_object($value)) ? "*RECURSION* -> $".get_class($value) : "*RECURSION*";
+						$propValue = (is_object($propValue)) ? "*RECURSION* -> $".get_class($propValue) : "*RECURSION*";
 
 					}
 				}
-				if(in_array(gettype($value),$this->arrType))
-					$this->checkType($value);
-				else echo $value;
+				if(in_array(gettype($propValue),$this->arrType))
+					$this->checkType($propValue);
+				else echo htmlspecialchars($propValue);
 				echo $this->closeTDRow();
 			}
-			$arrObjMethods=get_class_methods(get_class($var));
-			foreach($arrObjMethods as $key=>$value) {
-				$this->makeTDHeader("object",$value);
-				echo "[function]".$this->closeTDRow();
+			
+			$consts = $varRef->getConstants();
+			foreach($consts as $key => $const) {
+				$const=(gettype($const) == "string" && $const === "") ? "[empty string]" : $const;
+				$this->makeTDHeader("object",'[C] ' . $key);
+				
+				echo htmlspecialchars($const);
+				echo $this->closeTDRow();
 			}
+			
+			$methods = $varRef->getMethods();
+			foreach($methods as $method) {
+				$method->setAccessible(true);
+				$methodName = $method->name;
+				$methodModifiers = implode(' ', Reflection::getModifierNames($method->getModifiers()));
+				$methodAttr = $method->isPublic() ? '+' : ($method->isPrivate() ? '-' : '#');
+				$methodAttr = '[' . $methodAttr 
+					. ($method->isStatic() ? 'S' : '') 
+					. ($method->isAbstract() ? 'A' : '') 
+					. ($method->isFinal() ? 'F' : '') . '] ';
+				
+				$this->makeTDHeader("object", $methodAttr . $methodName, $methodModifiers);
+				
+				echo htmlspecialchars('[method]');
+				echo $this->closeTDRow();
+			}
+			
+		} else {
+			echo "<tr><td>".$this->error("object").$this->closeTDRow();
 		}
-		else echo "<tr><td>".$this->error("object").$this->closeTDRow();
+		
 		array_pop($this->arrHistory);
 		echo "</table>";
 	}
@@ -478,21 +518,31 @@ class dBug {
 			</script>
 			
 			<style type="text/css">
-				table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml {
+				table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml,
+					table.dBug_simpleVar{
 					font-family:Verdana, Arial, Helvetica, sans-serif; color:#000000; font-size:12px;
+					margin-bottom: 4px;
 				}
 				
 				.dBug_arrayHeader,
 				.dBug_objectHeader,
 				.dBug_resourceHeader,
 				.dBug_resourceCHeader,
-				.dBug_xmlHeader 
+				.dBug_xmlHeader, 
+				.dBug_simpleVarHeader
 					{ font-weight:bold; color:#FFFFFF; cursor:pointer; }
 				
 				.dBug_arrayKey,
 				.dBug_objectKey,
+				.dBug_simpleVarKey, 
 				.dBug_xmlKey 
 					{ cursor:pointer; }
+					
+				/* simpleVar: null,boolean,string,integer,double etc... */
+				table.dBug_simpleVar { background-color:#006600; }
+				table.dBug_simpleVar td { background-color:#FFFFFF; }
+				table.dBug_simpleVar td.dBug_simpleVarHeader { background-color:#009900; }
+				table.dBug_simpleVar td.dBug_simpleVarKey { background-color:#CCFFCC; }
 					
 				/* array */
 				table.dBug_array { background-color:#006600; }
