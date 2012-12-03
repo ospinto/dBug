@@ -61,9 +61,12 @@ class Dbug {
 	var $bInitialized = false;
 	var $bCollapsed = false;
 	var $arrHistory = array();
+	private $var_name = '';
 	
 	//constructor
-	function dBug($var,$forceType="",$bCollapsed=false) {
+	function __construct($var,$forceType="",$bCollapsed=false, $var_name='') {
+		if ($var_name) $this->var_name = $var_name;
+		
 		//include js and css scripts
 		if(!defined('BDBUGINIT')) {
 			define("BDBUGINIT", TRUE);
@@ -79,6 +82,7 @@ class Dbug {
 
 	//get variable name
 	function getVariableName() {
+		if ($this->var_name) return $this->var_name;
 		$arrBacktrace = debug_backtrace();
 
 		//possible 'included' functions
@@ -101,7 +105,7 @@ class Dbug {
 			$code = $arrLines[($arrFile["line"]-1)];
 	
 			//find call to dBug class
-			preg_match('/\bnew dBug\s*\(\s*(.+)\s*\);/i', $code, $arrMatches);
+			preg_match('/\bnew /\Ospinto/\Dbug\s*\(\s*(.+)\s*\);/i', $code, $arrMatches);
 			
 			return $arrMatches[1];
 		}
