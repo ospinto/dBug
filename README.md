@@ -1,9 +1,26 @@
 # dBug
 
-## How to use
 
-    include_once("dBug.php");
-    new dBug($myVariable);
+Install via Composer.
+Class will be autoloaded.
+
+
+use 
+``` php
+
+   new \Ospinto\Dbug($myVariable);
+
+```
+
+Class arguments:
+
+    __construct ($var,$forceType="",$bCollapsed=false, $var_name='')
+
+    $var - variable to dump,
+    $bCollapsed - view collapsed
+    $var_name - name of variable - displayed in dump header
+
+
 
 More examples at http://dbug.ospinto.com/examples.php
 
