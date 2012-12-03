@@ -1,18 +1,22 @@
 # dBug
+- Updated for PSR-0 copmliance
+- created composer package
 
+
+## Usage
 
 Install via Composer.
 Class will be autoloaded.
 
 
-use 
+### usage 
 ``` php
 
    new \Ospinto\Dbug($myVariable);
 
 ```
 
-Class arguments:
+### Class arguments:
 
     __construct ($var,$forceType="",$bCollapsed=false, $var_name='')
 
