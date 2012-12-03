@@ -1,0 +1,22 @@
+{
+    "name": "sunra/dBug",
+    "version": "0.1.0",
+    "type": "library",
+    "description": "Most beautiful variable dump library for PHP (ColdFusion like style)",
+    "keywords": ["php","dump","debug"],
+    "homepage": "http://github.com/sunra/dBug.git",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "sunra",
+            "email": "sunra@yandex.ru",
+            "homepage": "http://github.com/sunra"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.2"        
+    },    
+    "autoload": {
+        "psr-0": {"Ospinto\\Dbug": "lib/"}
+    }
+}
