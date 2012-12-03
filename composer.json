@@ -1,5 +1,5 @@
 {
-    "name": "sunra/dBug",
+    "name": "sunra/dbug",
     "version": "0.1.0",
     "type": "library",
     "description": "Most beautiful variable dump library for PHP (ColdFusion like style)",
