@@ -129,7 +129,7 @@ class dBug {
 				</tr>';
 	}
 	
-	//!renders table of 2 cells [type][value]
+	//!renders table of 2 cells in 1 row [type][value]
 	/*!
 		@param string $headerStyle name of the style of the header cell
 		@param string $header the text of the header cell
@@ -142,11 +142,10 @@ class dBug {
 		$this->initializeHeader($header);
 		echo '<table cellspacing=2 cellpadding=3 class="dBug_'.$headerStyle.'">
 				<tr>
-					<td '.(($this->bCollapsed) ? 'style="font-style:italic" ' : '').'class="dBug_'.$headerStyle.'Header" '.($colspan?'colspan='.$colspan:'').' onClick="dBug_toggleTable(this)">'
+					<td '.(($this->bCollapsed) ? 'style="font-style:italic" ' : '').'class="dBug_'.$headerStyle.'Header" '.($colspan?'colspan='.$colspan:'').' onClick="dBug_toggleRow(this)">'
 						.$header.
 					'</td>
-					<td valign="top" onClick="dBug_toggleRow(this)" class="dBug_'.$valueStyle.'">'.$value.'</td>
-				</tr>';
+					<td valign="top" class="dBug_'.$valueStyle.'">'.$value.'</td></tr>';
 	}
 	
 	//!creates the table row header
@@ -155,10 +154,9 @@ class dBug {
 		@param string $header the text of the key cell
 	*/
 	function makeTDHeader($type,$header) {
-		$str_d = ($this->bCollapsed) ? " style=\"display:none\"" : "";
-		echo "<tr".$str_d.">
-				<td valign=\"top\" onClick='dBug_toggleRow(this)' class=\"dBug_".$type."Key\">".$header."</td>
-				<td>";
+		echo '<tr'.($this->bCollapsed ? ' style="display:none"' : '').'>
+				<td valign="top" onClick="dBug_toggleRow(this)" class="dBug_'.$type.'Key">'.$header.'</td>
+				<td>';
 	}
 	
 	//!closes table row
@@ -170,7 +168,7 @@ class dBug {
 	
 	//!prints error
 	function  error($type) {
-		$error="Error: Variable cannot be a";
+		$error='Error: Variable cannot be a';
 		// this just checks if the type starts with a vowel or "x" and displays either "a" or "an"
 		if(in_array(substr($type,0,1),array("a","e","i","o","u","x")))
 			$error.="n";
@@ -295,8 +293,7 @@ class dBug {
 	}
 	//! checks wheither variable is object of special type (using varIs*Object), and renders it if it is generic object
 	function varIsObject(&$var) {
-		if($this->varIsDBObject($var))return 1;
-		
+		if($this->varIsSpecialObject($var))return 1;
 		$var_ser = serialize($var);
 		array_push($this->arrHistory, $var_ser);
 		$this->makeTableHeader('object','object');
@@ -333,6 +330,16 @@ class dBug {
 		array_pop($this->arrHistory);
 		echo '</table>';
 	}
+	
+	function varIsSpecialObject(&$var){
+		if($this->varIsDBObject($var))return 1;
+		if($var instanceof Exception){
+			$this->varIsException($var);
+			return 1;
+		}
+		return 0;
+	}
+	
 	
 	//!shows info about different resources, uses customized rendering founctions when needed
 	function varIsResource($var) {
@@ -535,7 +542,7 @@ class dBug {
 		}
 		echo '</tr>';
 		for($i=0;$i<$numrows;$i++) {
-			$row=call_user_func($db."_fetch_array",$var,constant(strtoupper($db)."_ASSOC"));
+			$row=call_user_func($db.'_fetch_array',$var,constant(strtoupper($db).'_ASSOC'));
 			echo "<tr>\n";
 			echo '<td class="dBug_databaseKey">'.($i+1).'</td>'; 
 			for($k=0;$k<$numfields;$k++) {
@@ -551,6 +558,63 @@ class dBug {
 			call_user_func($db.'_data_seek',$var,0);
 	}
 	//!@}
+	
+	
+	/*!
+		@name other special kinds of objects rendering functionality
+	*/
+	//!@{
+	
+	//!array of properties of every exception to be rendered first
+	static $exceptionMainProps=array('message','code','file','line');
+	//!array of properties of Exception of not to be rendered
+	static $exceptionExcludedProps=array(
+	//'xdebug_message',
+	'trace'
+	);
+	
+	//!function used to render exceptions
+	/*!
+		Renders exceptions : at first basic fields, then custom fields.
+		Custom private and protected fields are rendered if reflection api is available
+	*/
+	function varIsException(&$var) {
+		$code=$var->getCode();
+		$this->makeTableHeader('Exception',get_class($var).' :: '.$code);
+		foreach(static::$exceptionMainProps as &$pname) {
+			$this->makeTDHeader('Exception',$pname);
+			$this->checkType($var->{'get'.ucfirst($pname)}());
+			echo $this->closeTDRow();
+		}
+		unset($pname);
+		echo '<tr><td></td></tr>';
+		if(extension_loaded('Reflection')){
+			$refl=new ReflectionObject($var);
+			$props=$refl->getProperties(ReflectionProperty::IS_PROTECTED|ReflectionProperty::IS_PRIVATE);
+			foreach($props as &$prop) {
+				$pname=$prop->getName();
+				if(in_array($pname,static::$exceptionMainProps)||in_array($pname,static::$exceptionExcludedProps))continue;
+				$this->makeTDHeader('Exception',$pname);
+				$prop->setAccessible(true);
+				$this->checkType($prop->getValue($var));
+				$prop->setAccessible(false);
+				echo $this->closeTDRow();
+			}
+		}
+		
+		foreach($var as $key=>&$value) {
+			if($key=='xdebug_message')continue;
+			$this->makeTDHeader('Exception',$key);
+			$this->checkType($value);
+			echo $this->closeTDRow();
+		}
+		
+		echo '</table>';
+	}
+		
+	//!@}
+	
+	
 	
 	/*!
 		@name xml rendering functions
@@ -709,7 +773,7 @@ class dBug {
 			</script>
 			
 			<style type="text/css">
-				table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml {
+				table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml{
 					font-family:Verdana, Arial, Helvetica, sans-serif; color:#000000; font-size:12px;
 				}
 				
@@ -725,9 +789,33 @@ class dBug {
 				
 				.dBug_arrayKey,
 				.dBug_objectKey,
-				.dBug_xmlKey 
+				.dBug_xmlKey,
+				.dBug_stringHeader,
+				.dBug_booleanHeader,
+				.dBug_ExceptionHeader
 					{ cursor:pointer; }
+				
+				.dBug_numeric td{
+					color:black;
+				}
+				
+				table.dBug_string,td.dBug_numericHeader{
+					color:white;
+				}
 					
+				/*Exception*/
+				table.dBug_Exception {
+					background-color:#AB1212;
+					border-width: 5px;
+					border-color: #FF006E;
+					border-style: dashed;
+					font-weight: bolder;
+					color: #FFF8F8;
+				}
+				table.dBug_Exception td { background-color:#E13636;}
+				table.dBug_Exception td.dBug_ExceptionHeader { background-color:#FF0000; }
+				table.dBug_Exception td.dBug_ExceptionKey { background-color:#E65050; }
+				
 				/* array */
 				table.dBug_array { background-color:#006600; }
 				table.dBug_array td { background-color:#FFFFFF; }
@@ -758,11 +846,20 @@ class dBug {
 				table.dBug_xml td.dBug_xmlHeader { background-color:#AAAAAA; }
 				table.dBug_xml td.dBug_xmlKey { background-color:#DDDDDD; }
 				
+				
+				/* database */
+				table.dBug_database { background-color:#8FB6E6 }
+				table.dBug_database td { background-color:#07DDF9; }
+				table.dBug_database td.dBug_databaseHeader { background-color:#07F7FB; }
+				table.dBug_database td.dBug_databaseKey { background-color:#AEF4F5; }
+				
+				
 				/* FALSE and boolean false*/
 				table.dBug_false { background-color:#CB0101; }
 				table.dBug_false td { background-color:#FFFFFF; }
 				table.dBug_boolean td.dBug_booleanFalse,table.dBug_false td.dBug_falseHeader { background-color:#F2054C; }
 				table.dBug_false td.dBug_falseKey { background-color:#DDDDDD; }
+				
 				
 				/* numeric */
 				table.dBug_numeric { background-color:#F9C007; }
@@ -770,11 +867,6 @@ class dBug {
 				table.dBug_numeric td.dBug_numericHeader { background-color:#F2D904; }
 				//table.dBug_numeric td.dBug_numericKey { background-color:#DDDDDD; }
 				
-				/* database */
-				table.dBug_database { background-color:#8FB6E6 }
-				table.dBug_database td { background-color:#07DDF9; }
-				table.dBug_database td.dBug_databaseHeader { background-color:#07F7FB; }
-				table.dBug_database td.dBug_databaseKey { background-color:#AEF4F5; }
 				
 				/* string */
 				table.dBug_string { background-color:#556832 }

@@ -30,7 +30,6 @@
 
 	   var $edible;
 	   var $color;
-
 	   function Vegetable($edible, $color="green") {
 		   $this->edible = $edible;
 		   $this->color = $color;
@@ -47,4 +46,25 @@
 	new dBug(new Vegetable("spinach"));
 	$a=curl_init("http://github.com/");
 	new dBug($a);
+
+	class myExc extends Exception{
+		private $priv="PREVED";
+		protected $ololo="trololol";
+		public $num=0;
+		function __construct($msg){
+			parent::__construct($msg);
+			$this->code=rand(0,100);
+		}
+	};
+	try{
+		throw new myExc("MedVed");
+	}catch(Exception $e){
+		new dBug($e);
+	}
+	try{
+		throw new Exception("hahahahaha");
+	}catch(Exception $e){
+		new dBug($e);
+	}
+	
 ?>
