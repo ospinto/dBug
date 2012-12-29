@@ -1,0 +1,33 @@
+{
+	"name" : "KOLANICH/dBug",
+	"type" : "library",
+	"description" : "A debug output library which is used to visualize different datatypes.",
+	"keywords" : ["debug", "output", "table", "visualization"],
+	"homepage" : "https://github.com/KOLANICH/dBug",
+	"license" : "GPL-2.0",
+	"authors" : [{
+			"name" : "KOLANICH",
+			"homepage" : "https://github.com/KOLANICH",
+			"role" : "Developer"
+		}, {
+			"name" : "Kwaku 'ospinto' Otchere",
+			"email" : "ospinto@hotmail.com",
+			"homepage" : "http://dbug.ospinto.com/",
+			"role" : "Former author"
+		}
+	],
+	"require" : {
+		"php" : ">=4.1.0"
+	},
+	"suggest" : {
+		"ext-Reflection" : "to show protected and private info (now is only implemented for Exceptions)"
+	},
+	"support" : {
+		"issues" : "https://github.com/KOLANICH/dBug/issues"
+	},
+	"autoload" : {
+		"classmap" : [
+			"dBug.php"
+		]
+	}
+}
