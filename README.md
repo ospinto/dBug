@@ -1,15 +1,15 @@
-# dBug
+dBug
+====
 
-## How to use
+my mod of dBug
+A debug output library which is used to visualize different datatypes.
+Initially was developed by ospinto.
 
-    include_once("dBug.php");
-    new dBug($myVariable);
+For more info visit [http://kolanich.github.com/dBug/]
 
-More examples at http://dbug.ospinto.com/examples.php
+## Very very brief list of features
 
-## Features
-
-PHP version of ColdFusionâ€™s cfdump.
+PHP version of ColdFusion’s cfdump.
 
 Outputs colored and structured tabular variable information.
 
@@ -22,4 +22,4 @@ Stylesheet can be easily edited.
 
 Table cells can be expanded and collapsed.
 
-Itâ€™s FREE!!!
+It’s FREE!!!

@@ -1,30 +1,5 @@
 <?php
 /*********************************************************************************************************************\
- * LAST UPDATE
- * ============
- * March 22, 2007
- *
- *
- * AUTHOR
- * =============
- * Kwaku Otchere 
- * ospinto@hotmail.com
- * 
- * Thanks to Andrew Hewitt (rudebwoy@hotmail.com) for the idea and suggestion
- * 
- * All the credit goes to ColdFusion's brilliant cfdump tag
- * Hope the next version of PHP can implement this or have something similar
- * I love PHP, but var_dump BLOWS!!!
- *
- * FOR DOCUMENTATION AND MORE EXAMPLES: VISIT http://dbug.ospinto.com
- *
- *
- * PURPOSE
- * =============
- * Dumps/Displays the contents of a variable in a colored tabular format
- * Based on the idea, javascript and css code of Macromedia's ColdFusion cfdump tag
- * A much better presentation of a variable's contents than PHP's var_dump and print_r functions
- *
  *
  * USAGE
  * =============
@@ -46,6 +21,10 @@
  * 
 \*********************************************************************************************************************/
 
+/*!
+	@author ospinto
+	@author KOLANICH
+*/
 class dBug {
 	
 	var $xmlDepth=array();
@@ -55,19 +34,26 @@ class dBug {
 	var $xmlCount=0;
 	var $xmlAttrib;
 	var $xmlName;
-	var $arrType=array("array","object","resource","boolean","NULL");
+	//var $arrType=array("array",'object',"resource","boolean","NULL");
+	
+	//!shows wheither the main header for this dBug call was drawn
 	var $bInitialized = false;
 	var $bCollapsed = false;
 	var $arrHistory = array();
+	static $embeddedStringMaxLength=50;
 	
-	//constructor
+	/*!
+		@param mixed $var Variable to dump
+		@param string $forceType type to marshall $var to show
+		@param boolean $bCollapsed should output be collapsed
+	*/
 	function dBug($var,$forceType="",$bCollapsed=false) {
 		//include js and css scripts
 		if(!defined('BDBUGINIT')) {
-			define("BDBUGINIT", TRUE);
-			$this->initJSandCSS();
+			define('BDBUGINIT', TRUE);
+			self::initJSandCSS();
 		}
-		$arrAccept=array("array","object","xml"); //array of variable types that can be "forced"
+		$arrAccept=array("array",'object',"xml"); //array of variable types that can be "forced"
 		$this->bCollapsed = $bCollapsed;
 		if(in_array($forceType,$arrAccept))
 			$this->{"varIs".ucfirst($forceType)}($var);
@@ -106,189 +92,443 @@ class dBug {
 		return "";
 	}
 	
-	//create the main table header
-	function makeTableHeader($type,$header,$colspan=2) {
+	function initializeHeader(&$header){
 		if(!$this->bInitialized) {
 			$header = $this->getVariableName() . " (" . $header . ")";
 			$this->bInitialized = true;
 		}
-		$str_i = ($this->bCollapsed) ? "style=\"font-style:italic\" " : ""; 
-		
-		echo "<table cellspacing=2 cellpadding=3 class=\"dBug_".$type."\">
+	}
+	
+	/*!
+		@name rendering functions
+		used to make tables representing different variables
+	*/
+	//!@{
+	
+	//!creates the main table header
+	/*!
+		@param string $type name of the style of the header cell
+		@param string $header the text of the header cell
+		@param integer $colspan colspan property for the header cell
+	*/
+	function makeTableHeader($type,$header,$colspan=2) {
+		$this->initializeHeader($header);
+		$this->renderTableHeader($type,$header,$colspan);
+	}
+	
+	//!draws the main table header
+	/*!
+		@param string $type name of the style of the header cell
+		@param string $text the text of the header cell
+		@param integer $colspan colspan property for the header cell
+	*/
+	function renderTableHeader($type,$text,$colspan=0){
+		echo '<table cellspacing=2 cellpadding=3 class="dBug_'.$type.'">
 				<tr>
-					<td ".$str_i."class=\"dBug_".$type."Header\" colspan=".$colspan." onClick='dBug_toggleTable(this)'>".$header."</td>
-				</tr>";
+					<td '.(($this->bCollapsed) ? 'style="font-style:italic" ' : '').'class="dBug_'.$type.'Header" '.($colspan?'colspan='.$colspan:'').' onClick="dBug_toggleTable(this)">'.$text.'</td>
+				</tr>';
 	}
 	
-	//create the table row header
+	//!renders table of 2 cells in 1 row [type][value]
+	/*!
+		@param string $headerStyle name of the style of the header cell
+		@param string $header the text of the header cell
+		@param string $value the text of the value cell
+		@param string $valueStyle name of the style of the value cell
+		@param integer $colspan colspan property for the header cell
+	*/
+	function renderPrimitiveType($headerStyle,$header,$value,$valueStyle=null,$colspan=0){
+		if(!$valueStyle)$valueStyle=$headerStyle;
+		$this->initializeHeader($header);
+		echo '<table cellspacing=2 cellpadding=3 class="dBug_'.$headerStyle.'">
+				<tr>
+					<td '.(($this->bCollapsed) ? 'style="font-style:italic" ' : '').'class="dBug_'.$headerStyle.'Header" '.($colspan?'colspan='.$colspan:'').' onClick="dBug_toggleRow(this)">'
+						.$header.
+					'</td>
+					<td valign="top" class="dBug_'.$valueStyle.'">'.$value.'</td></tr>';
+	}
+	
+	//!creates the table row header
+	/*!
+		@param string $type name of the style of the key cell
+		@param string $header the text of the key cell
+	*/
 	function makeTDHeader($type,$header) {
-		$str_d = ($this->bCollapsed) ? " style=\"display:none\"" : "";
-		echo "<tr".$str_d.">
-				<td valign=\"top\" onClick='dBug_toggleRow(this)' class=\"dBug_".$type."Key\">".$header."</td>
-				<td>";
+		echo '<tr'.($this->bCollapsed ? ' style="display:none"' : '').'>
+				<td valign="top" onClick="dBug_toggleRow(this)" class="dBug_'.$type.'Key">'.$header.'</td>
+				<td>';
 	}
 	
-	//close table row
+	//!closes table row
 	function closeTDRow() {
 		return "</td></tr>\n";
 	}
+	//!@}
 	
-	//error
+	
+	//!prints error
 	function  error($type) {
-		$error="Error: Variable cannot be a";
+		$error='Error: Variable cannot be a';
 		// this just checks if the type starts with a vowel or "x" and displays either "a" or "an"
 		if(in_array(substr($type,0,1),array("a","e","i","o","u","x")))
 			$error.="n";
 		return ($error." ".$type." type");
 	}
 
-	//check variable type
+	//!check variable type andd process the value in right way
 	function checkType($var) {
-		switch(gettype($var)) {
-			case "resource":
+		$type=gettype($var);
+		switch($type) {
+			case 'resource':
 				$this->varIsResource($var);
-				break;
-			case "object":
+			break;
+			case 'object':
 				$this->varIsObject($var);
-				break;
-			case "array":
+			break;
+			case 'array':
 				$this->varIsArray($var);
-				break;
-			case "NULL":
+			break;
+			case 'integer':
+			case 'double':
+				$this->varIsNumeric($var,$type);
+			break;
+			case 'NULL':
 				$this->varIsNULL();
-				break;
-			case "boolean":
+			break;
+			case 'boolean':
 				$this->varIsBoolean($var);
-				break;
+			break;
+			case 'string':
+				$this->varIsString($var);
+			break;
 			default:
-				$var=($var=="") ? "[empty string]" : $var;
+				$var=($var=='') ? '[empty string]' : $var;
 				echo "<table cellspacing=0><tr>\n<td>".$var."</td>\n</tr>\n</table>\n";
-				break;
+			break;
 		}
 	}
 	
-	//if variable is a NULL type
+	/*!
+		@name functions for rendering different types
+	*/
+	//!@{
+	
+	//!renders NULL as red-pink rectangle
 	function varIsNULL() {
-		echo "NULL";
+		$this->makeTableHeader('false','NULL');
+		echo '</table>';
 	}
 	
-	//if variable is a boolean type
-	function varIsBoolean($var) {
-		$var=($var==1) ? "TRUE" : "FALSE";
-		echo $var;
+	//!renders numeric types : integers and doubles
+	function varIsNumeric($var,$type) {
+		$this->renderPrimitiveType('numeric',$type,$var);
+		echo '</table>';
 	}
-			
-	//if variable is an array type
-	function varIsArray($var) {
+	
+	/*!
+		renders string either as primitive type (if it is short (less than $embeddedStringMaxLength chars)
+		and contains of one line) or line-by-line (otherwise)
+	*/
+	function varIsString(&$var){
+		if($var==''){
+			$this->makeTableHeader('string','empty string');
+			echo '</table>';
+			return;
+		}
+		$length=strlen($var);
+		$nv=htmlspecialchars($var);
+		$lines=explode("\n",$nv);
+		$linesCount=count($lines);
+		if($linesCount==1 && $length<=self::$embeddedStringMaxLength){
+			$this->renderPrimitiveType('string','string ['.$length.']',$var);
+		}else{
+			$this->makeTableHeader('string','string ('.$length.' chars @ '.$linesCount.' lines)');
+			foreach($lines as $num=>$line){
+				$this->makeTDHeader('string',$num);
+				echo ($line==''?'[empty line]':$line);
+				$this->closeTDRow('string');
+			}
+		}
+		echo "</table>";
+	}
+	
+	//!renders  boolean variable
+	function varIsBoolean(&$var) {
+		$var?$this->renderPrimitiveType('boolean','boolean','TRUE','booleanTrue'):$this->renderPrimitiveType('boolean','boolean','FALSE','booleanFalse');
+		echo '</table>';
+	}
+	
+	
+	function varIsArray(&$var) {
 		$var_ser = serialize($var);
 		array_push($this->arrHistory, $var_ser);
 		
-		$this->makeTableHeader("array","array");
+		$this->makeTableHeader('array','array');
 		if(is_array($var)) {
 			foreach($var as $key=>$value) {
-				$this->makeTDHeader("array",$key);
+				$this->makeTDHeader('array',$key);
 				
 				//check for recursion
 				if(is_array($value)) {
 					$var_ser = serialize($value);
-					if(in_array($var_ser, $this->arrHistory, TRUE))
-						$value = "*RECURSION*";
+					if(in_array($var_ser, $this->arrHistory, TRUE)){
+						echo '*RECURSION*';
+						echo $this->closeTDRow();
+						continue;
+					}
 				}
 				
-				if(in_array(gettype($value),$this->arrType))
+				//if(in_array(gettype($value),$this->arrType))
 					$this->checkType($value);
-				else {
+				/*else {
 					$value=(trim($value)=="") ? "[empty string]" : $value;
 					echo $value;
-				}
+				}*/
 				echo $this->closeTDRow();
 			}
 		}
-		else echo "<tr><td>".$this->error("array").$this->closeTDRow();
+		else echo '<tr><td>'.$this->error('array').$this->closeTDRow();
 		array_pop($this->arrHistory);
-		echo "</table>";
+		echo '</table>';
 	}
-	
-	//if variable is an object type
-	function varIsObject($var) {
+	//! checks wheither variable is object of special type (using varIs*Object), and renders it if it is generic object
+	function varIsObject(&$var) {
+		if($this->varIsSpecialObject($var))return 1;
 		$var_ser = serialize($var);
 		array_push($this->arrHistory, $var_ser);
-		$this->makeTableHeader("object","object");
+		$this->makeTableHeader('object','object');
 		
 		if(is_object($var)) {
 			$arrObjVars=get_object_vars($var);
 			foreach($arrObjVars as $key=>$value) {
 
-				$value=(!is_object($value) && !is_array($value) && trim($value)=="") ? "[empty string]" : $value;
-				$this->makeTDHeader("object",$key);
+				//$value=(!is_object($value) && !is_array($value) && trim($value)=="") ? "[empty string]" : $value;
+				$this->makeTDHeader('object',$key);
 				
 				//check for recursion
 				if(is_object($value)||is_array($value)) {
 					$var_ser = serialize($value);
 					if(in_array($var_ser, $this->arrHistory, TRUE)) {
-						$value = (is_object($value)) ? "*RECURSION* -> $".get_class($value) : "*RECURSION*";
-
+						echo (is_object($value)) ? '*RECURSION* -> $'.get_class($value) : '*RECURSION*';
+						echo $this->closeTDRow();
+						continue;
 					}
 				}
-				if(in_array(gettype($value),$this->arrType))
+				//if(in_array(gettype($value),$this->arrType))
 					$this->checkType($value);
-				else echo $value;
+				//else
+					//echo $value;
 				echo $this->closeTDRow();
 			}
 			$arrObjMethods=get_class_methods(get_class($var));
 			foreach($arrObjMethods as $key=>$value) {
-				$this->makeTDHeader("object",$value);
-				echo "[function]".$this->closeTDRow();
+				$this->makeTDHeader('object',$value);
+				echo '[function]'.$this->closeTDRow();
 			}
 		}
-		else echo "<tr><td>".$this->error("object").$this->closeTDRow();
+		else echo '<tr><td>'.$this->error('object').$this->closeTDRow();
 		array_pop($this->arrHistory);
-		echo "</table>";
+		echo '</table>';
 	}
-
-	//if variable is a resource type
+	
+	function varIsSpecialObject(&$var){
+		if($this->varIsDBObject($var))return 1;
+		if($var instanceof Exception){
+			$this->varIsException($var);
+			return 1;
+		}
+		return 0;
+	}
+	
+	
+	//!shows info about different resources, uses customized rendering founctions when needed
 	function varIsResource($var) {
-		$this->makeTableHeader("resourceC","resource",1);
+		$this->makeTableHeader('resourceC','resource',1);
 		echo "<tr>\n<td>\n";
-		switch(get_resource_type($var)) {
-			case "fbsql result":
-			case "mssql result":
-			case "msql query":
-			case "pgsql result":
-			case "sybase-db result":
-			case "sybase-ct result":
-			case "mysql result":
-				$db=current(explode(" ",get_resource_type($var)));
+		$restype=get_resource_type($var);
+		switch($restype) {
+			case 'fbsql result':
+			case 'mssql result':
+			case 'msql query':
+			case 'pgsql result':
+			case 'sybase-db result':
+			case 'sybase-ct result':
+			case 'mysql result':
+				$db=current(explode(' ',$restype));
 				$this->varIsDBResource($var,$db);
-				break;
-			case "gd":
+			break;
+			case 'gd':
 				$this->varIsGDResource($var);
-				break;
-			case "xml":
+			break;
+			case 'xml':
 				$this->varIsXmlResource($var);
-				break;
+			break;
+			case 'curl':
+				$this->varIsCurlEasyResource($var);
+			break;
+			/*case "curl_multi":
+				$this->varIsCurlMultiResource($var);
+			break;*/
 			default:
-				echo get_resource_type($var).$this->closeTDRow();
+				echo $restype.$this->closeTDRow();
 				break;
 		}
 		echo $this->closeTDRow()."</table>\n";
 	}
-
-	//if variable is a database resource type
-	function varIsDBResource($var,$db="mysql") {
-		if($db == "pgsql")
-			$db = "pg";
-		if($db == "sybase-db" || $db == "sybase-ct")
-			$db = "sybase";
-		$arrFields = array("name","type","flags");	
-		$numrows=call_user_func($db."_num_rows",$var);
-		$numfields=call_user_func($db."_num_fields",$var);
-		$this->makeTableHeader("resource",$db." result",$numfields+1);
-		echo "<tr><td class=\"dBug_resourceKey\">&nbsp;</td>";
+	
+	//!@}
+	
+	/*!
+		@name functions for rendering different resources
+	*/
+	//!@{
+	
+	//!shows information about curl easy handles
+	/*!simply iterates through handle info and displays everything which is not converted into false*/
+	function varIsCurlEasyResource(&$var) {
+		$this->makeTableHeader('resource','curl easy handle',2);
+		$info=curl_getinfo($var);
+		foreach($info as $name=>&$piece){
+			if($piece){
+				$this->makeTDHeader('resource',$name);
+				//echo $piece.$this->closeTDRow();
+				$this->checkType($piece);
+				echo $this->closeTDRow();
+			}
+		}
+		unset($info);
+		echo '</table>';
+		
+	}
+	//!not implemented yet
+	function varIsCurlMultiResource(&$var) {
+		
+	}
+	
+	//!if variable is an image/gd resource type
+	function varIsGDResource($var) {
+		$this->makeTableHeader('resource','gd',2);
+		$this->makeTDHeader('resource','Width');
+		$this->checkType(imagesx($var));
+		echo $this->closeTDRow();
+		$this->makeTDHeader('resource','Height');
+		$this->checkType(imagesy($var));
+		echo $this->closeTDRow();
+		$this->makeTDHeader('resource','Colors');
+		$this->checkType(imagecolorstotal($var));
+		echo $this->closeTDRow();
+		/*$this->makeTDHeader('resource','Image');
+		touch('php://temp');
+		imagepng($var,'php://temp');
+		$img=file_get_contents('php://temp');
+		echo $img;
+		
+		echo '<img src="data:image/png;base64,'.base64_encode($img).'"/>'.$this->closeTDRow();*/
+		echo '</table>';
+	}
+	
+	//!@}
+	
+	
+	/*!
+		@name database results rendering functions
+	*/
+	//!@{
+	
+	//!renders either PDO or SQLite3 statement objects
+	/*!@returns 1 if the object is DB object, 0 otherwise*/
+	function varIsDBObject($var) {
+		$structure=array();
+		$data=array();
+		$retres=false;
+		if($var instanceof SQLite3Result){
+			//$var=clone $var;
+			$dbtype='';
+			$count=$var->numColumns();
+			for($i=0;$i<$count;$i++){
+				$structure[$i]=array();
+				$structure[$i][0]=$var->columnName($i);
+				$structure[$i][1]=$var->columnType($i);
+			}
+			$var->reset();
+			while($res=$var->fetchArray(SQLITE3_NUM)){
+				$data[]=$res;
+			}
+			$var->reset();
+			$dbtype='SQLite3';
+			unset($var);
+			$this->renderDBData($dbtype,$structure,$data);
+			$retres=true;
+		}
+		if($var instanceof PDOStatement){
+			//$var=clone $var;
+			$count=$var->columnCount();
+			$col=null;
+			for($i=0;$i<$count;$i++){
+				//$col=$var->getColumnMeta(0);
+				$col=$var->getColumnMeta($i);
+				$structure[$i]=array();
+				$structure[$i][0]=$col['name'];
+				$structure[$i][1]=(isset($col['driver:decl_type'])?(isset($col["len"])?"({$col["len"]})":'')."\n":'')."({$col["native_type"]})";
+			}
+			unset($col);
+			$data=$var->fetchAll();
+			$var->closeCursor();
+			$dbtype='PDOStatement';
+			unset($var);
+			$this->renderDBData($dbtype,$structure,$data);
+			$retres=true;
+		}
+		unset($dbtype);
+		unset($data);
+		unset($structure);
+		return $retres;
+	}
+	
+	//!renders database data
+	/*!
+		@param string $objectType type of the db, it is only the name of header now
+		@param array $structure 'header' of the table - columns names and types
+		@param array $data rows of sql request result
+	*/
+	function renderDBData(&$objectType,&$structure,&$data){
+		$this->makeTableHeader('database',$objectType,count($structure)+1);
+		echo '<tr><td class="dBug_databaseKey">&nbsp;</td>';
+		foreach($structure as $field) {
+			echo '<td class="dBug_databaseKey"'.(isset($field[1])?' title="'.$field[1].'"':"").'>'.$field[0]."</td>";
+		}
+		echo '</tr>';
+		if(empty($data)){
+			echo '<tr><td class="dBug_resourceKey" colspan="'.(count($structure)+1).'">[empty result]</td></tr>';
+		}else
+			$i=0;
+			foreach($data as $row) {
+				echo "<tr>\n";
+				echo '<td class="dBug_resourceKey">'.(++$i).'</td>'; 
+				for($k=0;$k<count($row);$k++) {
+					$fieldrow=($row[$k]==='') ? '[empty string]' : $row[$k];
+					echo '<td>'.$fieldrow."</td>\n";
+				}
+				echo "</tr>\n";
+			}
+		echo '</table>';
+	}
+	
+	//!renders database resource (fetch result) into table or ... smth else
+	function varIsDBResource($var,$db='mysql') {
+		if($db == 'pgsql')
+			$db = 'pg';
+		if($db == 'sybase-db' || $db == 'sybase-ct')
+			$db = 'sybase';
+		$arrFields = array('name','type','flags');	
+		$numrows=call_user_func($db.'_num_rows',$var);
+		$numfields=call_user_func($db.'_num_fields',$var);
+		$this->makeTableHeader('database',$db.' result',$numfields+1);
+		echo '<tr><td class="dBug_databaseKey">&nbsp;</td>';
 		for($i=0;$i<$numfields;$i++) {
-			$field_header = "";
+			$field_header = '';
 			for($j=0; $j<count($arrFields); $j++) {
-				$db_func = $db."_field_".$arrFields[$j];
+				$db_func = $db.'_field_'.$arrFields[$j];
 				if(function_exists($db_func)) {
 					$fheader = call_user_func($db_func, $var, $i). " ";
 					if($j==0)
@@ -297,67 +537,119 @@ class dBug {
 						$field_header .= $fheader;
 				}
 			}
-			$field[$i]=call_user_func($db."_fetch_field",$var,$i);
-			echo "<td class=\"dBug_resourceKey\" title=\"".$field_header."\">".$field_name."</td>";
+			$field[$i]=call_user_func($db.'_fetch_field',$var,$i);
+			echo '<td class="dBug_databaseKey" title="'.$field_header.'">'.$field_name.'</td>';
 		}
-		echo "</tr>";
+		echo '</tr>';
 		for($i=0;$i<$numrows;$i++) {
-			$row=call_user_func($db."_fetch_array",$var,constant(strtoupper($db)."_ASSOC"));
+			$row=call_user_func($db.'_fetch_array',$var,constant(strtoupper($db).'_ASSOC'));
 			echo "<tr>\n";
-			echo "<td class=\"dBug_resourceKey\">".($i+1)."</td>"; 
+			echo '<td class="dBug_databaseKey">'.($i+1).'</td>'; 
 			for($k=0;$k<$numfields;$k++) {
 				$tempField=$field[$k]->name;
 				$fieldrow=$row[($field[$k]->name)];
-				$fieldrow=($fieldrow=="") ? "[empty string]" : $fieldrow;
-				echo "<td>".$fieldrow."</td>\n";
+				$fieldrow=($fieldrow=='') ? '[empty string]' : $fieldrow;
+				echo '<td>'.$fieldrow."</td>\n";
 			}
 			echo "</tr>\n";
 		}
-		echo "</table>";
+		echo '</table>';
 		if($numrows>0)
-			call_user_func($db."_data_seek",$var,0);
+			call_user_func($db.'_data_seek',$var,0);
 	}
+	//!@}
 	
-	//if variable is an image/gd resource type
-	function varIsGDResource($var) {
-		$this->makeTableHeader("resource","gd",2);
-		$this->makeTDHeader("resource","Width");
-		echo imagesx($var).$this->closeTDRow();
-		$this->makeTDHeader("resource","Height");
-		echo imagesy($var).$this->closeTDRow();
-		$this->makeTDHeader("resource","Colors");
-		echo imagecolorstotal($var).$this->closeTDRow();
-		echo "</table>";
+	
+	/*!
+		@name other special kinds of objects rendering functionality
+	*/
+	//!@{
+	
+	//!array of properties of every exception to be rendered first
+	static $exceptionMainProps=array('message','code','file','line');
+	//!array of properties of Exception of not to be rendered
+	static $exceptionExcludedProps=array(
+	//'xdebug_message',
+	'trace'
+	);
+	
+	//!function used to render exceptions
+	/*!
+		Renders exceptions : at first basic fields, then custom fields.
+		Custom private and protected fields are rendered if reflection api is available
+	*/
+	function varIsException(&$var) {
+		$code=$var->getCode();
+		$this->makeTableHeader('Exception',get_class($var).' :: '.$code);
+		foreach(static::$exceptionMainProps as &$pname) {
+			$this->makeTDHeader('Exception',$pname);
+			$this->checkType($var->{'get'.ucfirst($pname)}());
+			echo $this->closeTDRow();
+		}
+		unset($pname);
+		echo '<tr><td></td></tr>';
+		if(extension_loaded('Reflection')){
+			$refl=new ReflectionObject($var);
+			$props=$refl->getProperties(ReflectionProperty::IS_PROTECTED|ReflectionProperty::IS_PRIVATE);
+			foreach($props as &$prop) {
+				$pname=$prop->getName();
+				if(in_array($pname,static::$exceptionMainProps)||in_array($pname,static::$exceptionExcludedProps))continue;
+				$this->makeTDHeader('Exception',$pname);
+				$prop->setAccessible(true);
+				$this->checkType($prop->getValue($var));
+				$prop->setAccessible(false);
+				echo $this->closeTDRow();
+			}
+		}
+		
+		foreach($var as $key=>&$value) {
+			if($key=='xdebug_message')continue;
+			$this->makeTDHeader('Exception',$key);
+			$this->checkType($value);
+			echo $this->closeTDRow();
+		}
+		
+		echo '</table>';
 	}
+		
+	//!@}
 	
-	//if variable is an xml type
+	
+	
+	/*!
+		@name xml rendering functions
+	*/
+	//!@{
+	
+	//!if variable is an xml type
+	//!remember, that you must force type to xml to use this
 	function varIsXml($var) {
 		$this->varIsXmlResource($var);
 	}
 	
-	//if variable is an xml resource type
+	//!if variable is an xml resource type
 	function varIsXmlResource($var) {
 		$xml_parser=xml_parser_create();
 		xml_parser_set_option($xml_parser,XML_OPTION_CASE_FOLDING,0); 
-		xml_set_element_handler($xml_parser,array(&$this,"xmlStartElement"),array(&$this,"xmlEndElement")); 
-		xml_set_character_data_handler($xml_parser,array(&$this,"xmlCharacterData"));
-		xml_set_default_handler($xml_parser,array(&$this,"xmlDefaultHandler")); 
+		xml_set_element_handler($xml_parser,array(&$this,'xmlStartElement'),array(&$this,'xmlEndElement')); 
+		xml_set_character_data_handler($xml_parser,array(&$this,'xmlCharacterData'));
+		xml_set_default_handler($xml_parser,array(&$this,'xmlDefaultHandler')); 
 		
-		$this->makeTableHeader("xml","xml document",2);
-		$this->makeTDHeader("xml","xmlRoot");
+		$this->makeTableHeader('xml','xml document',2);
+		$this->makeTDHeader('xml','xmlRoot');
 		
 		//attempt to open xml file
-		$bFile=(!($fp=@fopen($var,"r"))) ? false : true;
+		$bFile=(!($fp=@fopen($var,'r'))) ? false : true;
 		
 		//read xml file
 		if($bFile) {
-			while($data=str_replace("\n","",fread($fp,4096)))
+			while($data=str_replace("\n",'',fread($fp,4096)))
 				$this->xmlParse($xml_parser,$data,feof($fp));
 		}
 		//if xml is not a file, attempt to read it as a string
 		else {
 			if(!is_string($var)) {
-				echo $this->error("xml").$this->closeTDRow()."</table>\n";
+				echo $this->error('xml').$this->closeTDRow()."</table>\n";
 				return;
 			}
 			$data=$var;
@@ -368,7 +660,7 @@ class dBug {
 		
 	}
 	
-	//parse xml
+	//!parses xml
 	function xmlParse($xml_parser,$data,$bFinal) {
 		if (!xml_parse($xml_parser,$data,$bFinal)) { 
 				   die(sprintf("XML error: %s at line %d\n", 
@@ -377,7 +669,7 @@ class dBug {
 		}
 	}
 	
-	//xml: inititiated when a start tag is encountered
+	//!xml: inititiated when a start tag is encountered
 	function xmlStartElement($parser,$name,$attribs) {
 		$this->xmlAttrib[$this->xmlCount]=$attribs;
 		$this->xmlName[$this->xmlCount]=$name;
@@ -393,7 +685,7 @@ class dBug {
 		$this->xmlCount++;
 	} 
 	
-	//xml: initiated when an end tag is encountered
+	//!xml: initiated when an end tag is encountered
 	function xmlEndElement($parser,$name) {
 		for($i=0;$i<$this->xmlCount;$i++) {
 			eval($this->xmlSData[$i]);
@@ -403,15 +695,15 @@ class dBug {
 			$this->makeTDHeader("xml","xmlComment");
 			echo (!empty($this->xmlDData[$i])) ? $this->xmlDData[$i] : "&nbsp;";
 			echo $this->closeTDRow();
-			$this->makeTDHeader("xml","xmlChildren");
+			$this->makeTDHeader('xml',"xmlChildren");
 			unset($this->xmlCData[$i],$this->xmlDData[$i]);
 		}
 		echo $this->closeTDRow();
-		echo "</table>";
+		echo '</table>';
 		$this->xmlCount=0;
 	} 
 	
-	//xml: initiated when text between tags is encountered
+	//!xml: initiated when text between tags is encountered
 	function xmlCharacterData($parser,$data) {
 		$count=$this->xmlCount-1;
 		if(!empty($this->xmlCData[$count]))
@@ -420,7 +712,9 @@ class dBug {
 			$this->xmlCData[$count]=$data;
 	} 
 	
-	//xml: initiated when a comment or other miscellaneous texts is encountered
+	//!@}
+	
+	//!xml: initiated when a comment or other miscellaneous texts is encountered
 	function xmlDefaultHandler($parser,$data) {
 		//strip '<!--' and '-->' off comments
 		$data=str_replace(array("&lt;!--","--&gt;"),"",htmlspecialchars($data));
@@ -430,8 +724,9 @@ class dBug {
 		else
 			$this->xmlDData[$count]=$data;
 	}
-
-	function initJSandCSS() {
+	
+	//! adds needed JS and CSS sources to page
+	static function initJSandCSS() {
 		echo <<<SCRIPTS
 			<script language="JavaScript">
 			/* code modified from ColdFusion's cfdump code */
@@ -478,7 +773,7 @@ class dBug {
 			</script>
 			
 			<style type="text/css">
-				table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml {
+				table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml{
 					font-family:Verdana, Arial, Helvetica, sans-serif; color:#000000; font-size:12px;
 				}
 				
@@ -486,14 +781,41 @@ class dBug {
 				.dBug_objectHeader,
 				.dBug_resourceHeader,
 				.dBug_resourceCHeader,
-				.dBug_xmlHeader 
+				.dBug_xmlHeader,
+				.dBug_falseHeader,
+				.dBug_numericHeader,
+				.dBug_databaseHeader
 					{ font-weight:bold; color:#FFFFFF; cursor:pointer; }
 				
 				.dBug_arrayKey,
 				.dBug_objectKey,
-				.dBug_xmlKey 
+				.dBug_xmlKey,
+				.dBug_stringHeader,
+				.dBug_booleanHeader,
+				.dBug_ExceptionHeader
 					{ cursor:pointer; }
+				
+				.dBug_numeric td{
+					color:black;
+				}
+				
+				table.dBug_string,td.dBug_numericHeader{
+					color:white;
+				}
 					
+				/*Exception*/
+				table.dBug_Exception {
+					background-color:#AB1212;
+					border-width: 5px;
+					border-color: #FF006E;
+					border-style: dashed;
+					font-weight: bolder;
+					color: #FFF8F8;
+				}
+				table.dBug_Exception td { background-color:#E13636;}
+				table.dBug_Exception td.dBug_ExceptionHeader { background-color:#FF0000; }
+				table.dBug_Exception td.dBug_ExceptionKey { background-color:#E65050; }
+				
 				/* array */
 				table.dBug_array { background-color:#006600; }
 				table.dBug_array td { background-color:#FFFFFF; }
@@ -523,6 +845,41 @@ class dBug {
 				table.dBug_xml td { background-color:#FFFFFF; }
 				table.dBug_xml td.dBug_xmlHeader { background-color:#AAAAAA; }
 				table.dBug_xml td.dBug_xmlKey { background-color:#DDDDDD; }
+				
+				
+				/* database */
+				table.dBug_database { background-color:#8FB6E6 }
+				table.dBug_database td { background-color:#07DDF9; }
+				table.dBug_database td.dBug_databaseHeader { background-color:#07F7FB; }
+				table.dBug_database td.dBug_databaseKey { background-color:#AEF4F5; }
+				
+				
+				/* FALSE and boolean false*/
+				table.dBug_false { background-color:#CB0101; }
+				table.dBug_false td { background-color:#FFFFFF; }
+				table.dBug_boolean td.dBug_booleanFalse,table.dBug_false td.dBug_falseHeader { background-color:#F2054C; }
+				table.dBug_false td.dBug_falseKey { background-color:#DDDDDD; }
+				
+				
+				/* numeric */
+				table.dBug_numeric { background-color:#F9C007; }
+				table.dBug_numeric td { background-color:#FFFFFF; }
+				table.dBug_numeric td.dBug_numericHeader { background-color:#F2D904; }
+				//table.dBug_numeric td.dBug_numericKey { background-color:#DDDDDD; }
+				
+				
+				/* string */
+				table.dBug_string { background-color:#556832 }
+				table.dBug_string td { background-color:#B3C520;}
+				table.dBug_string td.dBug_stringHeader { background-color:#808000; }
+				table.dBug_string td.dBug_stringKey { background-color:#96A428; }
+				
+				/*boolean*/
+				table.dBug_boolean { background-color:#43769F }
+				table.dBug_boolean td.dBug_booleanHeader { background-color:#5EA5DE; }
+				table.dBug_boolean td.dBug_booleanTrue { background-color:#04F258; }
+				table.dBug_boolean td.dBug_booleanTrue,table.dBug_boolean td.dBug_booleanFalse { width:46px; text-align: center;border-radius: 45%;}
+				
 			</style>
 SCRIPTS;
 	}
