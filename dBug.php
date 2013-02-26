@@ -2,16 +2,21 @@
 /*********************************************************************************************************************\
  * LAST UPDATE
  * ============
- * March 22, 2007
+ * August 6th, 2012
  *
  *
  * AUTHOR
  * =============
- * Kwaku Otchere 
+ * Kwaku Otchere
  * ospinto@hotmail.com
- * 
+ *
+ * AFTERMARKET HACKER
+ * ==================
+ * Josh Sherman
+ * josh@crowdsavings.com
+ *
  * Thanks to Andrew Hewitt (rudebwoy@hotmail.com) for the idea and suggestion
- * 
+ *
  * All the credit goes to ColdFusion's brilliant cfdump tag
  * Hope the next version of PHP can implement this or have something similar
  * I love PHP, but var_dump BLOWS!!!
@@ -32,22 +37,22 @@
  * example:
  * new dBug ( $myVariable );
  *
- * 
- * if the optional "forceType" string is given, the variable supplied to the 
- * function is forced to have that forceType type. 
+ *
+ * if the optional "forceType" string is given, the variable supplied to the
+ * function is forced to have that forceType type.
  * example: new dBug( $myVariable , "array" );
- * will force $myVariable to be treated and dumped as an array type, 
+ * will force $myVariable to be treated and dumped as an array type,
  * even though it might originally have been a string type, etc.
  *
  * NOTE!
  * ==============
  * forceType is REQUIRED for dumping an xml string or xml file
  * new dBug ( $strXml, "xml" );
- * 
+ *
 \*********************************************************************************************************************/
 
 class dBug {
-	
+
 	var $xmlDepth=array();
 	var $xmlCData;
 	var $xmlSData;
@@ -59,7 +64,7 @@ class dBug {
 	var $bInitialized = false;
 	var $bCollapsed = false;
 	var $arrHistory = array();
-	
+
 	//constructor
 	function dBug($var,$forceType="",$bCollapsed=false) {
 		//include js and css scripts
@@ -81,45 +86,45 @@ class dBug {
 
 		//possible 'included' functions
 		$arrInclude = array("include","include_once","require","require_once");
-		
+
 		//check for any included/required files. if found, get array of the last included file (they contain the right line numbers)
 		for($i=count($arrBacktrace)-1; $i>=0; $i--) {
 			$arrCurrent = $arrBacktrace[$i];
-			if(array_key_exists("function", $arrCurrent) && 
+			if(array_key_exists("function", $arrCurrent) &&
 				(in_array($arrCurrent["function"], $arrInclude) || (0 != strcasecmp($arrCurrent["function"], "dbug"))))
 				continue;
 
 			$arrFile = $arrCurrent;
-			
+
 			break;
 		}
-		
+
 		if(isset($arrFile)) {
 			$arrLines = file($arrFile["file"]);
 			$code = $arrLines[($arrFile["line"]-1)];
-	
+
 			//find call to dBug class
 			preg_match('/\bnew dBug\s*\(\s*(.+)\s*\);/i', $code, $arrMatches);
-			
+
 			return $arrMatches[1];
 		}
 		return "";
 	}
-	
+
 	//create the main table header
 	function makeTableHeader($type,$header,$colspan=2) {
 		if(!$this->bInitialized) {
 			$header = $this->getVariableName() . " (" . $header . ")";
 			$this->bInitialized = true;
 		}
-		$str_i = ($this->bCollapsed) ? "style=\"font-style:italic\" " : ""; 
-		
+		$str_i = ($this->bCollapsed) ? "style=\"font-style:italic\" " : "";
+
 		echo "<table cellspacing=2 cellpadding=3 class=\"dBug_".$type."\">
 				<tr>
 					<td ".$str_i."class=\"dBug_".$type."Header\" colspan=".$colspan." onClick='dBug_toggleTable(this)'>".$header."</td>
 				</tr>";
 	}
-	
+
 	//create the table row header
 	function makeTDHeader($type,$header) {
 		$str_d = ($this->bCollapsed) ? " style=\"display:none\"" : "";
@@ -127,12 +132,12 @@ class dBug {
 				<td valign=\"top\" onClick='dBug_toggleRow(this)' class=\"dBug_".$type."Key\">".$header."</td>
 				<td>";
 	}
-	
+
 	//close table row
 	function closeTDRow() {
 		return "</td></tr>\n";
 	}
-	
+
 	//error
 	function  error($type) {
 		$error="Error: Variable cannot be a";
@@ -166,35 +171,35 @@ class dBug {
 				break;
 		}
 	}
-	
+
 	//if variable is a NULL type
 	function varIsNULL() {
 		echo "NULL";
 	}
-	
+
 	//if variable is a boolean type
 	function varIsBoolean($var) {
 		$var=($var==1) ? "TRUE" : "FALSE";
 		echo $var;
 	}
-			
+
 	//if variable is an array type
 	function varIsArray($var) {
 		$var_ser = serialize($var);
 		array_push($this->arrHistory, $var_ser);
-		
+
 		$this->makeTableHeader("array","array");
 		if(is_array($var)) {
 			foreach($var as $key=>$value) {
 				$this->makeTDHeader("array",$key);
-				
+
 				//check for recursion
 				if(is_array($value)) {
 					$var_ser = serialize($value);
 					if(in_array($var_ser, $this->arrHistory, TRUE))
 						$value = "*RECURSION*";
 				}
-				
+
 				if(in_array(gettype($value),$this->arrType))
 					$this->checkType($value);
 				else {
@@ -208,20 +213,20 @@ class dBug {
 		array_pop($this->arrHistory);
 		echo "</table>";
 	}
-	
+
 	//if variable is an object type
 	function varIsObject($var) {
 		$var_ser = serialize($var);
 		array_push($this->arrHistory, $var_ser);
 		$this->makeTableHeader("object","object");
-		
+
 		if(is_object($var)) {
 			$arrObjVars=get_object_vars($var);
 			foreach($arrObjVars as $key=>$value) {
 
 				$value=(!is_object($value) && !is_array($value) && trim($value)=="") ? "[empty string]" : $value;
 				$this->makeTDHeader("object",$key);
-				
+
 				//check for recursion
 				if(is_object($value)||is_array($value)) {
 					$var_ser = serialize($value);
@@ -280,7 +285,7 @@ class dBug {
 			$db = "pg";
 		if($db == "sybase-db" || $db == "sybase-ct")
 			$db = "sybase";
-		$arrFields = array("name","type","flags");	
+		$arrFields = array("name","type","flags");
 		$numrows=call_user_func($db."_num_rows",$var);
 		$numfields=call_user_func($db."_num_fields",$var);
 		$this->makeTableHeader("resource",$db." result",$numfields+1);
@@ -304,7 +309,7 @@ class dBug {
 		for($i=0;$i<$numrows;$i++) {
 			$row=call_user_func($db."_fetch_array",$var,constant(strtoupper($db)."_ASSOC"));
 			echo "<tr>\n";
-			echo "<td class=\"dBug_resourceKey\">".($i+1)."</td>"; 
+			echo "<td class=\"dBug_resourceKey\">".($i+1)."</td>";
 			for($k=0;$k<$numfields;$k++) {
 				$tempField=$field[$k]->name;
 				$fieldrow=$row[($field[$k]->name)];
@@ -317,7 +322,7 @@ class dBug {
 		if($numrows>0)
 			call_user_func($db."_data_seek",$var,0);
 	}
-	
+
 	//if variable is an image/gd resource type
 	function varIsGDResource($var) {
 		$this->makeTableHeader("resource","gd",2);
@@ -329,26 +334,26 @@ class dBug {
 		echo imagecolorstotal($var).$this->closeTDRow();
 		echo "</table>";
 	}
-	
+
 	//if variable is an xml type
 	function varIsXml($var) {
 		$this->varIsXmlResource($var);
 	}
-	
+
 	//if variable is an xml resource type
 	function varIsXmlResource($var) {
 		$xml_parser=xml_parser_create();
-		xml_parser_set_option($xml_parser,XML_OPTION_CASE_FOLDING,0); 
-		xml_set_element_handler($xml_parser,array(&$this,"xmlStartElement"),array(&$this,"xmlEndElement")); 
+		xml_parser_set_option($xml_parser,XML_OPTION_CASE_FOLDING,0);
+		xml_set_element_handler($xml_parser,array(&$this,"xmlStartElement"),array(&$this,"xmlEndElement"));
 		xml_set_character_data_handler($xml_parser,array(&$this,"xmlCharacterData"));
-		xml_set_default_handler($xml_parser,array(&$this,"xmlDefaultHandler")); 
-		
+		xml_set_default_handler($xml_parser,array(&$this,"xmlDefaultHandler"));
+
 		$this->makeTableHeader("xml","xml document",2);
 		$this->makeTDHeader("xml","xmlRoot");
-		
+
 		//attempt to open xml file
 		$bFile=(!($fp=@fopen($var,"r"))) ? false : true;
-		
+
 		//read xml file
 		if($bFile) {
 			while($data=str_replace("\n","",fread($fp,4096)))
@@ -363,20 +368,20 @@ class dBug {
 			$data=$var;
 			$this->xmlParse($xml_parser,$data,1);
 		}
-		
+
 		echo $this->closeTDRow()."</table>\n";
-		
+
 	}
-	
+
 	//parse xml
 	function xmlParse($xml_parser,$data,$bFinal) {
-		if (!xml_parse($xml_parser,$data,$bFinal)) { 
-				   die(sprintf("XML error: %s at line %d\n", 
-							   xml_error_string(xml_get_error_code($xml_parser)), 
-							   xml_get_current_line_number($xml_parser)));
+		if (!xml_parse($xml_parser,$data,$bFinal)) {
+			die(sprintf("XML error: %s at line %d\n",
+				xml_error_string(xml_get_error_code($xml_parser)),
+				xml_get_current_line_number($xml_parser)));
 		}
 	}
-	
+
 	//xml: inititiated when a start tag is encountered
 	function xmlStartElement($parser,$name,$attribs) {
 		$this->xmlAttrib[$this->xmlCount]=$attribs;
@@ -391,8 +396,8 @@ class dBug {
 			$this->xmlSData[$this->xmlCount].='echo "&nbsp;";';
 		$this->xmlSData[$this->xmlCount].='echo $this->closeTDRow();';
 		$this->xmlCount++;
-	} 
-	
+	}
+
 	//xml: initiated when an end tag is encountered
 	function xmlEndElement($parser,$name) {
 		for($i=0;$i<$this->xmlCount;$i++) {
@@ -409,8 +414,8 @@ class dBug {
 		echo $this->closeTDRow();
 		echo "</table>";
 		$this->xmlCount=0;
-	} 
-	
+	}
+
 	//xml: initiated when text between tags is encountered
 	function xmlCharacterData($parser,$data) {
 		$count=$this->xmlCount-1;
@@ -418,8 +423,8 @@ class dBug {
 			$this->xmlCData[$count].=$data;
 		else
 			$this->xmlCData[$count]=$data;
-	} 
-	
+	}
+
 	//xml: initiated when a comment or other miscellaneous texts is encountered
 	function xmlDefaultHandler($parser,$data) {
 		//strip '<!--' and '-->' off comments
@@ -439,7 +444,7 @@ class dBug {
 					var target = (document.all) ? source.parentElement.cells[1] : source.parentNode.lastChild;
 					dBug_toggleTarget(target,dBug_toggleSource(source));
 				}
-				
+
 				function dBug_toggleSource(source) {
 					if (source.style.fontStyle=='italic') {
 						source.style.fontStyle='normal';
@@ -451,11 +456,11 @@ class dBug {
 						return 'closed';
 					}
 				}
-			
+
 				function dBug_toggleTarget(target,switchToState) {
 					target.style.display = (switchToState=='open') ? '' : 'none';
 				}
-			
+
 				function dBug_toggleTable(source) {
 					var switchToState=dBug_toggleSource(source);
 					if(document.all) {
@@ -476,48 +481,54 @@ class dBug {
 					}
 				}
 			</script>
-			
+
 			<style type="text/css">
-				table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml {
-					font-family:Verdana, Arial, Helvetica, sans-serif; color:#000000; font-size:12px;
-				}
-				
+				table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml
+					{ font-family:Verdana, Arial, Helvetica, sans-serif; color:#000000; font-size:12px; border-spacing:2px; display:table; border-collapse:separate; }
+
+				table.dBug_array td,
+				table.dBug_object td,
+				table.dBug_resource td,
+				table.dBug_resourceC td,
+				table.dBug_xml td
+					{ line-height:1.3; padding:3px; vertical-align:top; }
+
 				.dBug_arrayHeader,
 				.dBug_objectHeader,
 				.dBug_resourceHeader,
 				.dBug_resourceCHeader,
-				.dBug_xmlHeader 
+				.dBug_xmlHeader
 					{ font-weight:bold; color:#FFFFFF; cursor:pointer; }
-				
+
 				.dBug_arrayKey,
 				.dBug_objectKey,
-				.dBug_xmlKey 
+				.dBug_xmlKey
 					{ cursor:pointer; }
-					
+
 				/* array */
 				table.dBug_array { background-color:#006600; }
 				table.dBug_array td { background-color:#FFFFFF; }
 				table.dBug_array td.dBug_arrayHeader { background-color:#009900; }
 				table.dBug_array td.dBug_arrayKey { background-color:#CCFFCC; }
-				
+
 				/* object */
 				table.dBug_object { background-color:#0000CC; }
 				table.dBug_object td { background-color:#FFFFFF; }
 				table.dBug_object td.dBug_objectHeader { background-color:#4444CC; }
 				table.dBug_object td.dBug_objectKey { background-color:#CCDDFF; }
-				
+
 				/* resource */
 				table.dBug_resourceC { background-color:#884488; }
 				table.dBug_resourceC td { background-color:#FFFFFF; }
 				table.dBug_resourceC td.dBug_resourceCHeader { background-color:#AA66AA; }
 				table.dBug_resourceC td.dBug_resourceCKey { background-color:#FFDDFF; }
-				
+
 				/* resource */
 				table.dBug_resource { background-color:#884488; }
 				table.dBug_resource td { background-color:#FFFFFF; }
 				table.dBug_resource td.dBug_resourceHeader { background-color:#AA66AA; }
 				table.dBug_resource td.dBug_resourceKey { background-color:#FFDDFF; }
-				
+
 				/* xml */
 				table.dBug_xml { background-color:#888888; }
 				table.dBug_xml td { background-color:#FFFFFF; }
