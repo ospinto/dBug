@@ -406,7 +406,7 @@ class dBug {
 	}
 	
 	//!if variable is an image/gd resource type
-	function varIsGDResource($var) {
+	function varIsGDResource(&$var) {
 		$this->makeTableHeader('resource','gd',2);
 		$this->makeTDHeader('resource','Width');
 		$this->checkType(imagesx($var));
@@ -415,15 +415,18 @@ class dBug {
 		$this->checkType(imagesy($var));
 		echo $this->closeTDRow();
 		$this->makeTDHeader('resource','Colors');
-		$this->checkType(imagecolorstotal($var));
+		$this->checkType(imageistruecolor($var)?'TrueColor (16 777 216)':imagecolorstotal($var));
 		echo $this->closeTDRow();
-		/*$this->makeTDHeader('resource','Image');
-		touch('php://temp');
-		imagepng($var,'php://temp');
-		$img=file_get_contents('php://temp');
-		echo $img;
 		
-		echo '<img src="data:image/png;base64,'.base64_encode($img).'"/>'.$this->closeTDRow();*/
+		$this->makeTDHeader('resource','Image');
+		
+		
+		
+		ob_start();
+        imagepng($var);
+        $img = ob_get_clean();
+		
+		echo '<img src="data:image/png;base64,'.base64_encode($img).'"/>'.$this->closeTDRow();
 		echo '</table>';
 	}
 	
