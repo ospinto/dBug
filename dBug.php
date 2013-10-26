@@ -236,8 +236,8 @@ class dBug {
 			return;
 		}
 		$length=strlen($var);
-		$nv=htmlspecialchars($var);
-		$lines=explode("\n",$nv);
+		$nv=htmlspecialchars($var,ENT_QUOTES | ENT_SUBSTITUTE,'');
+		$lines=preg_split('/\R/', $nv);
 		$linesCount=count($lines);
 		if($linesCount==1 && $length<=self::$embeddedStringMaxLength){
 			$this->renderPrimitiveType('string','string ['.$length.']',$var);
