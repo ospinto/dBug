@@ -87,7 +87,7 @@ class dBug {
 			//find call to dBug class
 			preg_match('/\bnew dBug\s*\(\s*(.+)\s*\);/i', $code, $arrMatches);
 			
-			return $arrMatches[1];
+			return isset($arrMatches[1])?$arrMatches[1]:'[multiline]';
 		}
 		return "";
 	}
@@ -291,14 +291,25 @@ class dBug {
 		array_pop($this->arrHistory);
 		echo '</table>';
 	}
+	
+	
+	
 	//! checks wheither variable is object of special type (using varIs*Object), and renders it if it is generic object
 	function varIsObject(&$var) {
 		if($this->varIsSpecialObject($var))return 1;
 		$var_ser = serialize($var);
 		array_push($this->arrHistory, $var_ser);
-		$this->makeTableHeader('object','object');
 		
 		if(is_object($var)) {
+			$this->makeTableHeader('object','object ( '.get_class($var).' )');
+			if(method_exists($var,'__toString')){
+				$str=$var->__toString();
+				if($str!==null){
+					$this->makeTDHeader('string','[string representation]');
+					$this->varIsString($str);
+					echo $this->closeTDRow();
+				}
+			}
 			$arrObjVars=get_object_vars($var);
 			foreach($arrObjVars as $key=>$value) {
 
@@ -325,8 +336,18 @@ class dBug {
 				$this->makeTDHeader('object',$value);
 				echo '[function]'.$this->closeTDRow();
 			}
+			if($var instanceof \Iterator){
+				foreach($var as $key=>$value) {
+					$this->makeTDHeader('array',$key);
+					$this->checkType($value);
+					echo $this->closeTDRow();
+				}
+			}
 		}
-		else echo '<tr><td>'.$this->error('object').$this->closeTDRow();
+		else{
+			$this->makeTableHeader('object','object');
+			echo '<tr><td>'.$this->error('object').$this->closeTDRow();
+		}
 		array_pop($this->arrHistory);
 		echo '</table>';
 	}
@@ -823,7 +844,7 @@ class dBug {
 				table.dBug_array { background-color:#006600; }
 				table.dBug_array td { background-color:#FFFFFF; }
 				table.dBug_array td.dBug_arrayHeader { background-color:#009900; }
-				table.dBug_array td.dBug_arrayKey { background-color:#CCFFCC; }
+				table.dBug_array,.dBug_object td.dBug_arrayKey { background-color:#CCFFCC; }
 				
 				/* object */
 				table.dBug_object { background-color:#0000CC; }
@@ -875,7 +896,7 @@ class dBug {
 				table.dBug_string { background-color:#556832 }
 				table.dBug_string td { background-color:#B3C520;}
 				table.dBug_string td.dBug_stringHeader { background-color:#808000; }
-				table.dBug_string td.dBug_stringKey { background-color:#96A428; }
+				table.dBug_string,.dBug_object td.dBug_stringKey { background-color:#96A428; }
 				
 				/*boolean*/
 				table.dBug_boolean { background-color:#43769F }
