@@ -1,5 +1,10 @@
-<?
+<?PHP
+	namespace dBug\tests;
+	ini_set('display_errors',1);
+	error_reporting(E_ALL ^E_NOTICE);
+	header('Content-Type: text/html;charset=utf-8;');
 	include_once(__DIR__.'/dBug.php');
+	use dBug\dBug;
 	$a="The quick brown fox jumps over the lazy dog\nThe five boxing wizards jump quickly.\r\nСъешь же ещё этих мягких французских булок, да выпей чаю\n";
 	new dBug($a);
 	$a='vodka';
@@ -28,26 +33,28 @@
 	new dBug($variable);
 	class Vegetable {
 
-	   var $edible;
-	   var $color;
-	   function Vegetable($edible, $color="green") {
-		   $this->edible = $edible;
-		   $this->color = $color;
-	   }
+		var $edible;
+		var $color;
+		function Vegetable($edible, $color="green") {
+			$this->edible = $edible;
+			$this->color = $color;
+		}
 
-	   function is_edible() {
-		   return $this->edible;
-	   }
+		function is_edible() {
+			return $this->edible;
+		}
 
-	   function what_color() {
-		   return $this->color;
-	   }
+		function what_color() {
+			return $this->color;
+		}
 	}
 	new dBug(new Vegetable("spinach"));
-	$a=curl_init("http://github.com/");
+	$a=curl_init("https://github.com/");
 	new dBug($a);
-
-	class myExc extends Exception{
+	//curl_exec($a);
+	//new dBug($a);
+	
+	class myExc extends \Exception{
 		private $priv="PREVED";
 		protected $ololo="trololol";
 		public $num=0;
@@ -58,12 +65,12 @@
 	};
 	try{
 		throw new myExc("MedVed");
-	}catch(Exception $e){
+	}catch(\Exception $e){
 		new dBug($e);
 	}
 	try{
-		throw new Exception("hahahahaha");
-	}catch(Exception $e){
+		throw new \Exception("hahahahaha");
+	}catch(\Exception $e){
 		new dBug($e);
 	}
 	

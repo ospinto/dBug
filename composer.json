@@ -2,7 +2,7 @@
 	"name" : "KOLANICH/dBug",
 	"type" : "library",
 	"description" : "A debug output library which is used to visualize different datatypes.",
-	"keywords" : ["debug", "output", "table", "visualization"],
+	"keywords" : ["debug", "output", "table", "visualization","cfdump","ColdFusion"],
 	"homepage" : "https://github.com/KOLANICH/dBug",
 	"license" : "GPL-2.0",
 	"authors" : [{
@@ -17,7 +17,7 @@
 		}
 	],
 	"require" : {
-		"php" : ">=4.1.0"
+		"php" : ">=5.2"
 	},
 	"suggest" : {
 		"ext-Reflection" : "to show protected and private info (now is only implemented for Exceptions)"

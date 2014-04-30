@@ -13,4 +13,3 @@ return Symfony\CS\Config\Config::create()
 	->fixers(array('-indentation','-braces','-psr0','-controls_spaces'))
 	->finder($finder)
 ;
-
