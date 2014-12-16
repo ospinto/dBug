@@ -66,12 +66,14 @@ class dBug {
 	var $arrHistory = array();
 
 	//constructor
-	function dBug($var,$forceType="",$bCollapsed=false) {
+	function dBug($var,$forceType="",$bCollapsed=false, $reinit = false) {
 		//include js and css scripts
-		if(!defined('BDBUGINIT')) {
-			define("BDBUGINIT", TRUE);
-			$this->initJSandCSS();
-		}
+        if(!defined('BDBUGINIT') || $reinit) {
+            if(!defined('BDBUGINIT')){
+                define("BDBUGINIT", TRUE);
+            }
+            $this->initJSandCSS();
+        }
 		$arrAccept=array("array","object","xml"); //array of variable types that can be "forced"
 		$this->bCollapsed = $bCollapsed;
 		if(in_array($forceType,$arrAccept))
