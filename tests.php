@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	namespace dBug\tests;
 	ini_set('display_errors',1);
 	error_reporting(E_ALL ^E_NOTICE);
@@ -94,7 +94,3 @@
 	  $y = ($y + $corners[$a]['y']) / 2;
 	}
 	new dBug($img);
-	
-	
-	
-?>
