@@ -52,7 +52,7 @@ class dBug
 		//include js and css scripts
 		if (!defined('BDBUGINIT')) {
 			define('BDBUGINIT', TRUE);
-			self::initJSandCSS();
+			static::initJSandCSS();
 		}
 		$arrAccept=array("array",'object',"xml"); //array of variable types that can be "forced"
 		$this->bCollapsed = $bCollapsed;
@@ -633,7 +633,7 @@ class dBug
 		echo '<tr><td></td></tr>';
 		if (extension_loaded('Reflection')) {
 			$refl=new \ReflectionObject($var);
-			$props=$refl->getProperties(ReflectionProperty::IS_PROTECTED|ReflectionProperty::IS_PRIVATE);
+			$props=$refl->getProperties(\ReflectionProperty::IS_PROTECTED|\ReflectionProperty::IS_PRIVATE);
 			foreach ($props as &$prop) {
 				$pname=$prop->getName();
 				if(in_array($pname,static::$exceptionMainProps)||in_array($pname,static::$exceptionExcludedProps))continue;
