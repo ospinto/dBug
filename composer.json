@@ -17,7 +17,7 @@
 		}
 	],
 	"require" : {
-		"php" : ">=5.2"
+		"php" : ">=5.3"
 	},
 	"suggest" : {
 		"ext-Reflection" : "to show protected and private info (now is only implemented for Exceptions)"

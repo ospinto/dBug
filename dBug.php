@@ -25,6 +25,7 @@
 	@author KOLANICH
 */
 namespace dBug;
+
 class dBug
 {
 	public $xmlDepth=array();
@@ -40,23 +41,23 @@ class dBug
 	public $bInitialized = false;
 	public $bCollapsed = false;
 	public $arrHistory = array();
-	static $embeddedStringMaxLength=50;
+	public static $embeddedStringMaxLength=50;
 
 	/*!
 		@param mixed $var Variable to dump
 		@param string $forceType type to marshall $var to show
 		@param boolean $bCollapsed should output be collapsed
 	*/
-	public function __construct($var,$forceType="",$bCollapsed=false)
+	public function __construct($var, $forceType="", $bCollapsed=false)
 	{
 		//include js and css scripts
 		if (!defined('BDBUGINIT')) {
-			define('BDBUGINIT', TRUE);
+			define('BDBUGINIT', true);
 			static::initJSandCSS();
 		}
 		$arrAccept=array("array",'object',"xml"); //array of variable types that can be "forced"
 		$this->bCollapsed = $bCollapsed;
-		if(in_array($forceType,$arrAccept))
+		if(in_array($forceType, $arrAccept))
 			$this->{"varIs".ucfirst($forceType)}($var);
 		else
 			$this->checkType($var);
@@ -115,10 +116,10 @@ class dBug
 		@param string $header the text of the header cell
 		@param integer $colspan colspan property for the header cell
 	*/
-	public function makeTableHeader($type,$header,$colspan=2)
+	public function makeTableHeader($type, $header, $colspan=2)
 	{
 		$this->initializeHeader($header);
-		$this->renderTableHeader($type,$header,$colspan);
+		$this->renderTableHeader($type, $header, $colspan);
 	}
 
 	//!draws the main table header
@@ -127,7 +128,7 @@ class dBug
 		@param string $text the text of the header cell
 		@param integer $colspan colspan property for the header cell
 	*/
-	public function renderTableHeader($type,$text,$colspan=0)
+	public function renderTableHeader($type, $text, $colspan=0)
 	{
 		echo '<table cellspacing=2 cellpadding=3 class="dBug_'.$type.'">
 				<tr>
@@ -143,7 +144,7 @@ class dBug
 		@param string $valueStyle name of the style of the value cell
 		@param integer $colspan colspan property for the header cell
 	*/
-	public function renderPrimitiveType($headerStyle,$header,$value,$valueStyle=null,$colspan=0)
+	public function renderPrimitiveType($headerStyle, $header, $value, $valueStyle=null, $colspan=0)
 	{
 		if(!$valueStyle)$valueStyle=$headerStyle;
 		$this->initializeHeader($header);
@@ -160,7 +161,7 @@ class dBug
 		@param string $type name of the style of the key cell
 		@param string $header the text of the key cell
 	*/
-	public function makeTDHeader($type,$header)
+	public function makeTDHeader($type, $header)
 	{
 		echo '<tr'.($this->bCollapsed ? ' style="display:none"' : '').'>
 				<td valign="top" onClick="dBug_toggleRow(this)" class="dBug_'.$type.'Key">'.$header.'</td>
@@ -179,7 +180,7 @@ class dBug
 	{
 		$error='Error: Variable cannot be a';
 		// this just checks if the type starts with a vowel or "x" and displays either "a" or "an"
-		if(in_array(substr($type,0,1),array('a','e','i','o','u','x')))
+		if(in_array(substr($type, 0, 1), array('a','e','i','o','u','x')))
 			$error.='n';
 
 		return ($error.' '.$type.' type');
@@ -201,7 +202,7 @@ class dBug
 			break;
 			case 'integer':
 			case 'double':
-				$this->varIsNumeric($var,$type);
+				$this->varIsNumeric($var, $type);
 			break;
 			case 'NULL':
 				$this->varIsNULL();
@@ -227,14 +228,14 @@ class dBug
 	//!renders NULL as red-pink rectangle
 	public function varIsNULL()
 	{
-		$this->makeTableHeader('false','NULL');
+		$this->makeTableHeader('false', 'NULL');
 		echo '</table>';
 	}
 
 	//!renders numeric types : integers and doubles
-	public function varIsNumeric($var,$type)
+	public function varIsNumeric($var, $type)
 	{
-		$this->renderPrimitiveType('numeric',$type,$var);
+		$this->renderPrimitiveType('numeric', $type, $var);
 		echo '</table>';
 	}
 
@@ -245,22 +246,22 @@ class dBug
 	public function varIsString(&$var)
 	{
 		if ($var=='') {
-			$this->makeTableHeader('string','empty string');
+			$this->makeTableHeader('string', 'empty string');
 			echo '</table>';
 
 			return;
 		}
 		$length=strlen($var);
-		$nv=htmlspecialchars($var,ENT_QUOTES | ENT_SUBSTITUTE,'');
+		$nv=htmlspecialchars($var, ENT_QUOTES | ENT_SUBSTITUTE, '');
 		$lines=preg_split('/\R/u', $nv);
 		$linesCount=count($lines);
-		if ($linesCount==1 && $length<=self::$embeddedStringMaxLength) {
-			$this->renderPrimitiveType('string','string ['.$length.']',$var);
+		if ($linesCount==1 && $length<=static::$embeddedStringMaxLength) {
+			$this->renderPrimitiveType('string', 'string ['.$length.']', $var);
 		} else {
-			$this->makeTableHeader('string','string ('.$length.' chars @ '.$linesCount.' lines)');
+			$this->makeTableHeader('string', 'string ('.$length.' chars @ '.$linesCount.' lines)');
 			foreach ($lines as $num=>$line) {
-				$this->makeTDHeader('string',$num);
-				echo ($line==''?'[empty line]':$line);
+				$this->makeTDHeader('string', $num);
+				echo($line==''?'[empty line]':$line);
 				$this->closeTDRow('string');
 			}
 		}
@@ -270,7 +271,7 @@ class dBug
 	//!renders  boolean variable
 	public function varIsBoolean(&$var)
 	{
-		$var?$this->renderPrimitiveType('boolean','boolean','TRUE','booleanTrue'):$this->renderPrimitiveType('boolean','boolean','FALSE','booleanFalse');
+		$var?$this->renderPrimitiveType('boolean', 'boolean', 'TRUE', 'booleanTrue'):$this->renderPrimitiveType('boolean', 'boolean', 'FALSE', 'booleanFalse');
 		echo '</table>';
 	}
 
@@ -279,15 +280,15 @@ class dBug
 		$var_ser = serialize($var);
 		array_push($this->arrHistory, $var_ser);
 
-		$this->makeTableHeader('array','array');
+		$this->makeTableHeader('array', 'array');
 		if (is_array($var)) {
 			foreach ($var as $key=>$value) {
-				$this->makeTDHeader('array',$key);
+				$this->makeTDHeader('array', $key);
 
 				//check for recursion
 				if (is_array($value)) {
 					$var_ser = serialize($value);
-					if (in_array($var_ser, $this->arrHistory, TRUE)) {
+					if (in_array($var_ser, $this->arrHistory, true)) {
 						echo '*RECURSION*';
 						echo $this->closeTDRow();
 						continue;
@@ -315,11 +316,11 @@ class dBug
 		array_push($this->arrHistory, $var_ser);
 
 		if (is_object($var)) {
-			$this->makeTableHeader('object','object ( '.get_class($var).' )');
-			if (method_exists($var,'__toString')) {
+			$this->makeTableHeader('object', 'object ( '.get_class($var).' )');
+			if (method_exists($var, '__toString')) {
 				$str=$var->__toString();
 				if ($str!==null) {
-					$this->makeTDHeader('string','[string representation]');
+					$this->makeTDHeader('string', '[string representation]');
 					$this->varIsString($str);
 					echo $this->closeTDRow();
 				}
@@ -328,13 +329,13 @@ class dBug
 			foreach ($arrObjVars as $key=>$value) {
 
 				//$value=(!is_object($value) && !is_array($value) && trim($value)=="") ? "[empty string]" : $value;
-				$this->makeTDHeader('object',$key);
+				$this->makeTDHeader('object', $key);
 
 				//check for recursion
 				if (is_object($value)||is_array($value)) {
 					$var_ser = serialize($value);
-					if (in_array($var_ser, $this->arrHistory, TRUE)) {
-						echo (is_object($value)) ? '*RECURSION* -> $'.get_class($value) : '*RECURSION*';
+					if (in_array($var_ser, $this->arrHistory, true)) {
+						echo(is_object($value)) ? '*RECURSION* -> $'.get_class($value) : '*RECURSION*';
 						echo $this->closeTDRow();
 						continue;
 					}
@@ -347,18 +348,18 @@ class dBug
 			}
 			$arrObjMethods=get_class_methods(get_class($var));
 			foreach ($arrObjMethods as $key=>$value) {
-				$this->makeTDHeader('object',$value);
+				$this->makeTDHeader('object', $value);
 				echo '[function]'.$this->closeTDRow();
 			}
 			if ($var instanceof \Iterator) {
 				foreach ($var as $key=>$value) {
-					$this->makeTDHeader('array',$key);
+					$this->makeTDHeader('array', $key);
 					$this->checkType($value);
 					echo $this->closeTDRow();
 				}
 			}
 		} else {
-			$this->makeTableHeader('object','object');
+			$this->makeTableHeader('object', 'object');
 			echo '<tr><td>'.$this->error('object').$this->closeTDRow();
 		}
 		array_pop($this->arrHistory);
@@ -380,7 +381,7 @@ class dBug
 	//!shows info about different resources, uses customized rendering founctions when needed
 	public function varIsResource($var)
 	{
-		$this->makeTableHeader('resourceC','resource',1);
+		$this->makeTableHeader('resourceC', 'resource', 1);
 		echo "<tr>\n<td>\n";
 		$restype=get_resource_type($var);
 		switch ($restype) {
@@ -391,8 +392,8 @@ class dBug
 			case 'sybase-db result':
 			case 'sybase-ct result':
 			case 'mysql result':
-				$db=current(explode(' ',$restype));
-				$this->varIsDBResource($var,$db);
+				$db=current(explode(' ', $restype));
+				$this->varIsDBResource($var, $db);
 			break;
 			case 'gd':
 				$this->varIsGDResource($var);
@@ -424,11 +425,11 @@ class dBug
 	/*!simply iterates through handle info and displays everything which is not converted into false*/
 	public function varIsCurlEasyResource(&$var)
 	{
-		$this->makeTableHeader('resource','curl easy handle',2);
+		$this->makeTableHeader('resource', 'curl easy handle', 2);
 		$info=curl_getinfo($var);
 		foreach ($info as $name=>&$piece) {
 			if ($piece) {
-				$this->makeTDHeader('resource',$name);
+				$this->makeTDHeader('resource', $name);
 				//echo $piece.$this->closeTDRow();
 				$this->checkType($piece);
 				echo $this->closeTDRow();
@@ -446,18 +447,18 @@ class dBug
 	//!if variable is an image/gd resource type
 	public function varIsGDResource(&$var)
 	{
-		$this->makeTableHeader('resource','gd',2);
-		$this->makeTDHeader('resource','Width');
+		$this->makeTableHeader('resource', 'gd', 2);
+		$this->makeTDHeader('resource', 'Width');
 		$this->checkType(imagesx($var));
 		echo $this->closeTDRow();
-		$this->makeTDHeader('resource','Height');
+		$this->makeTDHeader('resource', 'Height');
 		$this->checkType(imagesy($var));
 		echo $this->closeTDRow();
-		$this->makeTDHeader('resource','Colors');
+		$this->makeTDHeader('resource', 'Colors');
 		$this->checkType(imageistruecolor($var)?'TrueColor (16 777 216)':imagecolorstotal($var));
 		echo $this->closeTDRow();
 
-		$this->makeTDHeader('resource','Image');
+		$this->makeTDHeader('resource', 'Image');
 
 		ob_start();
 		imagepng($var);
@@ -497,7 +498,7 @@ class dBug
 			$var->reset();
 			$dbtype='SQLite3';
 			unset($var);
-			$this->renderDBData($dbtype,$structure,$data);
+			$this->renderDBData($dbtype, $structure, $data);
 			$retres=true;
 		}
 		if ($var instanceof \PDOStatement) {
@@ -516,7 +517,7 @@ class dBug
 			$var->closeCursor();
 			$dbtype='PDOStatement';
 			unset($var);
-			$this->renderDBData($dbtype,$structure,$data);
+			$this->renderDBData($dbtype, $structure, $data);
 			$retres=true;
 		}
 		unset($dbtype);
@@ -532,9 +533,9 @@ class dBug
 		@param array $structure 'header' of the table - columns names and types
 		@param array $data rows of sql request result
 	*/
-	public function renderDBData(&$objectType,&$structure,&$data)
+	public function renderDBData(&$objectType, &$structure, &$data)
 	{
-		$this->makeTableHeader('database',$objectType,count($structure)+1);
+		$this->makeTableHeader('database', $objectType, count($structure)+1);
 		echo '<tr><td class="dBug_databaseKey">&nbsp;</td>';
 		foreach ($structure as $field) {
 			echo '<td class="dBug_databaseKey"'.(isset($field[1])?' title="'.$field[1].'"':"").'>'.$field[0]."</td>";
@@ -557,16 +558,16 @@ class dBug
 	}
 
 	//!renders database resource (fetch result) into table or ... smth else
-	public function varIsDBResource($var,$db='mysql')
+	public function varIsDBResource($var, $db='mysql')
 	{
 		if($db == 'pgsql')
 			$db = 'pg';
 		if($db == 'sybase-db' || $db == 'sybase-ct')
 			$db = 'sybase';
 		$arrFields = array('name','type','flags');
-		$numrows=call_user_func($db.'_num_rows',$var);
-		$numfields=call_user_func($db.'_num_fields',$var);
-		$this->makeTableHeader('database',$db.' result',$numfields+1);
+		$numrows=call_user_func($db.'_num_rows', $var);
+		$numfields=call_user_func($db.'_num_fields', $var);
+		$this->makeTableHeader('database', $db.' result', $numfields+1);
 		echo '<tr><td class="dBug_databaseKey">&nbsp;</td>';
 		for ($i=0;$i<$numfields;$i++) {
 			$field_header = '';
@@ -580,12 +581,12 @@ class dBug
 						$field_header .= $fheader;
 				}
 			}
-			$field[$i]=call_user_func($db.'_fetch_field',$var,$i);
+			$field[$i]=call_user_func($db.'_fetch_field', $var, $i);
 			echo '<td class="dBug_databaseKey" title="'.$field_header.'">'.$field_name.'</td>';
 		}
 		echo '</tr>';
 		for ($i=0;$i<$numrows;$i++) {
-			$row=call_user_func($db.'_fetch_array',$var,constant(strtoupper($db).'_ASSOC'));
+			$row=call_user_func($db.'_fetch_array', $var, constant(strtoupper($db).'_ASSOC'));
 			echo "<tr>\n";
 			echo '<td class="dBug_databaseKey">'.($i+1).'</td>';
 			for ($k=0;$k<$numfields;$k++) {
@@ -598,7 +599,7 @@ class dBug
 		}
 		echo '</table>';
 		if($numrows>0)
-			call_user_func($db.'_data_seek',$var,0);
+			call_user_func($db.'_data_seek', $var, 0);
 	}
 	//!@}
 
@@ -608,9 +609,9 @@ class dBug
 	//!@{
 
 	//!array of properties of every exception to be rendered first
-	static $exceptionMainProps=array('message','code','file','line');
+	public static $exceptionMainProps=array('message','code','file','line');
 	//!array of properties of Exception of not to be rendered
-	static $exceptionExcludedProps=array(
+	public static $exceptionExcludedProps=array(
 	//'xdebug_message',
 	'trace'
 	);
@@ -623,9 +624,9 @@ class dBug
 	public function varIsException(&$var)
 	{
 		$code=$var->getCode();
-		$this->makeTableHeader('Exception',get_class($var).' :: '.$code);
+		$this->makeTableHeader('Exception', get_class($var).' :: '.$code);
 		foreach (static::$exceptionMainProps as &$pname) {
-			$this->makeTDHeader('Exception',$pname);
+			$this->makeTDHeader('Exception', $pname);
 			$this->checkType($var->{'get'.ucfirst($pname)}());
 			echo $this->closeTDRow();
 		}
@@ -636,8 +637,8 @@ class dBug
 			$props=$refl->getProperties(\ReflectionProperty::IS_PROTECTED|\ReflectionProperty::IS_PRIVATE);
 			foreach ($props as &$prop) {
 				$pname=$prop->getName();
-				if(in_array($pname,static::$exceptionMainProps)||in_array($pname,static::$exceptionExcludedProps))continue;
-				$this->makeTDHeader('Exception',$pname);
+				if(in_array($pname, static::$exceptionMainProps)||in_array($pname, static::$exceptionExcludedProps))continue;
+				$this->makeTDHeader('Exception', $pname);
 				$prop->setAccessible(true);
 				$this->checkType($prop->getValue($var));
 				$prop->setAccessible(false);
@@ -647,7 +648,7 @@ class dBug
 
 		foreach ($var as $key=>&$value) {
 			if($key=='xdebug_message')continue;
-			$this->makeTDHeader('Exception',$key);
+			$this->makeTDHeader('Exception', $key);
 			$this->checkType($value);
 			echo $this->closeTDRow();
 		}
@@ -673,21 +674,21 @@ class dBug
 	public function varIsXmlResource($var)
 	{
 		$xml_parser=xml_parser_create();
-		xml_parser_set_option($xml_parser,XML_OPTION_CASE_FOLDING,0);
-		xml_set_element_handler($xml_parser,array(&$this,'xmlStartElement'),array(&$this,'xmlEndElement'));
-		xml_set_character_data_handler($xml_parser,array(&$this,'xmlCharacterData'));
-		xml_set_default_handler($xml_parser,array(&$this,'xmlDefaultHandler'));
+		xml_parser_set_option($xml_parser, XML_OPTION_CASE_FOLDING, 0);
+		xml_set_element_handler($xml_parser, array(&$this,'xmlStartElement'), array(&$this,'xmlEndElement'));
+		xml_set_character_data_handler($xml_parser, array(&$this,'xmlCharacterData'));
+		xml_set_default_handler($xml_parser, array(&$this,'xmlDefaultHandler'));
 
-		$this->makeTableHeader('xml','xml document',2);
-		$this->makeTDHeader('xml','xmlRoot');
+		$this->makeTableHeader('xml', 'xml document', 2);
+		$this->makeTDHeader('xml', 'xmlRoot');
 
 		//attempt to open xml file
-		$bFile=(!($fp=@fopen($var,'r'))) ? false : true;
+		$bFile=(!($fp=@fopen($var, 'r'))) ? false : true;
 
 		//read xml file
 		if ($bFile) {
-			while($data=str_replace("\n",'',fread($fp,4096)))
-				$this->xmlParse($xml_parser,$data,feof($fp));
+			while($data=str_replace("\n", '', fread($fp, 4096)))
+				$this->xmlParse($xml_parser, $data, feof($fp));
 		}
 		//if xml is not a file, attempt to read it as a string
 		else {
@@ -697,7 +698,7 @@ class dBug
 				return;
 			}
 			$data=$var;
-			$this->xmlParse($xml_parser,$data,1);
+			$this->xmlParse($xml_parser, $data, 1);
 		}
 
 		echo $this->closeTDRow()."</table>\n";
@@ -705,9 +706,9 @@ class dBug
 	}
 
 	//!parses xml
-	public function xmlParse($xml_parser,$data,$bFinal)
+	public function xmlParse($xml_parser, $data, $bFinal)
 	{
-		if (!xml_parse($xml_parser,$data,$bFinal)) {
+		if (!xml_parse($xml_parser, $data, $bFinal)) {
 					throw new \Exception(sprintf("dBug XML error: %s at line %d\n",
 							   xml_error_string(xml_get_error_code($xml_parser)),
 							   xml_get_current_line_number($xml_parser)));
@@ -715,7 +716,7 @@ class dBug
 	}
 
 	//!xml: inititiated when a start tag is encountered
-	public function xmlStartElement($parser,$name,$attribs)
+	public function xmlStartElement($parser, $name, $attribs)
 	{
 		$this->xmlAttrib[$this->xmlCount]=$attribs;
 		$this->xmlName[$this->xmlCount]=$name;
@@ -732,18 +733,18 @@ class dBug
 	}
 
 	//!xml: initiated when an end tag is encountered
-	public function xmlEndElement($parser,$name)
+	public function xmlEndElement($parser, $name)
 	{
 		for ($i=0;$i<$this->xmlCount;$i++) {
 			eval($this->xmlSData[$i]);
-			$this->makeTDHeader("xml","xmlText");
-			echo (!empty($this->xmlCData[$i])) ? $this->xmlCData[$i] : "&nbsp;";
+			$this->makeTDHeader("xml", "xmlText");
+			echo(!empty($this->xmlCData[$i])) ? $this->xmlCData[$i] : "&nbsp;";
 			echo $this->closeTDRow();
-			$this->makeTDHeader("xml","xmlComment");
-			echo (!empty($this->xmlDData[$i])) ? $this->xmlDData[$i] : "&nbsp;";
+			$this->makeTDHeader("xml", "xmlComment");
+			echo(!empty($this->xmlDData[$i])) ? $this->xmlDData[$i] : "&nbsp;";
 			echo $this->closeTDRow();
-			$this->makeTDHeader('xml',"xmlChildren");
-			unset($this->xmlCData[$i],$this->xmlDData[$i]);
+			$this->makeTDHeader('xml', "xmlChildren");
+			unset($this->xmlCData[$i], $this->xmlDData[$i]);
 		}
 		echo $this->closeTDRow();
 		echo '</table>';
@@ -751,7 +752,7 @@ class dBug
 	}
 
 	//!xml: initiated when text between tags is encountered
-	public function xmlCharacterData($parser,$data)
+	public function xmlCharacterData($parser, $data)
 	{
 		$count=$this->xmlCount-1;
 		if(!empty($this->xmlCData[$count]))
@@ -763,10 +764,10 @@ class dBug
 	//!@}
 
 	//!xml: initiated when a comment or other miscellaneous texts is encountered
-	public function xmlDefaultHandler($parser,$data)
+	public function xmlDefaultHandler($parser, $data)
 	{
 		//strip '<!--' and '-->' off comments
-		$data=str_replace(array("&lt;!--","--&gt;"),"",htmlspecialchars($data));
+		$data=str_replace(array("&lt;!--","--&gt;"), "", htmlspecialchars($data));
 		$count=$this->xmlCount-1;
 		if(!empty($this->xmlDData[$count]))
 			$this->xmlDData[$count].=$data;

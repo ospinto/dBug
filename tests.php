@@ -1,12 +1,24 @@
 <?php
 	namespace dBug\tests;
-	ini_set('display_errors',1);
+
+ini_set('display_errors', 1);
 	error_reporting(E_ALL ^E_NOTICE);
 	header('Content-Type: text/html;charset=utf-8;');
 	include_once(__DIR__.'/dBug.php');
 	use dBug\dBug;
+
+	$a="The quick brown fox jumps over the lazy dog";
+	
+	//trying to modify
+	class myDBug extends dBug{
+		public static $embeddedStringMaxLength=10;
+	}
+	new dBug($a);
+	new myDBug($a);
+	
 	$a="The quick brown fox jumps over the lazy dog\nThe five boxing wizards jump quickly.\r\nСъешь же ещё этих мягких французских булок, да выпей чаю\n";
 	new dBug($a);
+	
 	$a='vodka';
 	new dBug($a);
 	$a=3;
@@ -28,23 +40,23 @@
 		"fourth"=>49.36,
 		'fifth'=>true,
 		6=>false,
-		NULL,
+		null,
 	);
 	new dBug($variable);
 	class Vegetable {
 
-		var $edible;
-		var $color;
-		function Vegetable($edible, $color="green") {
+		public $edible;
+		public $color;
+		public function __construct($edible, $color="green") {
 			$this->edible = $edible;
 			$this->color = $color;
 		}
 
-		function is_edible() {
+		public function is_edible() {
 			return $this->edible;
 		}
 
-		function what_color() {
+		public function what_color() {
 			return $this->color;
 		}
 	}
@@ -58,9 +70,9 @@
 		private $priv="PREVED";
 		protected $ololo="trololol";
 		public $num=0;
-		function __construct($msg){
+		public function __construct($msg) {
 			parent::__construct($msg);
-			$this->code=rand(0,100);
+			$this->code=rand(0, 100);
 		}
 	};
 	try{
@@ -85,12 +97,10 @@
 	$corners[1] = array('x' =>   0, 'y' => 190);
 	$corners[2] = array('x' => 200, 'y' => 190);
 
-	$red = imagecolorallocate($img, 255, 0, 0); 
-
 	for ($i = 0; $i < 10000; $i++) {
-	  imagesetpixel($img, round($x),round($y), $red);
-	  $a = rand(0, 2);
-	  $x = ($x + $corners[$a]['x']) / 2;
-	  $y = ($y + $corners[$a]['y']) / 2;
+		$a = rand(0, 2);
+		imagesetpixel($img, round($x), round($y), imagecolorallocate($img, 255*$x/190, 255*(1-$y/190), 255*$a/2));
+		$x = ($x + $corners[$a]['x']) / 2;
+		$y = ($y + $corners[$a]['y']) / 2;
 	}
 	new dBug($img);

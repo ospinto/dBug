@@ -4,9 +4,9 @@ my mod of dBug
 A debug output library which is used to visualize different datatypes.
 Initially was developed by ospinto.
 
-For more info visit [http://kolanich.github.com/dBug/]
+For more info visit [https://kolanich.github.com/dBug/]
 
-![ohloh stats](https://www.ohloh.net/p/php-dbug/widgets/project_partner_badge.gif)
+[![openhub stats](https://openhub.net/p/php-dbug/widgets/project_partner_badge.gif)](https://openhub.net/p/php-dbug)
 
 ## Very very brief list of features
 
