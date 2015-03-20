@@ -256,7 +256,7 @@ class dBug
 		$lines=preg_split('/\R/u', $nv);
 		$linesCount=count($lines);
 		if ($linesCount==1 && $length<=static::$embeddedStringMaxLength) {
-			$this->renderPrimitiveType('string', 'string ['.$length.']', $var);
+			$this->renderPrimitiveType('string', 'string ['.$length.']', $nv);
 		} else {
 			$this->makeTableHeader('string', 'string ('.$length.' chars @ '.$linesCount.' lines)');
 			foreach ($lines as $num=>$line) {
