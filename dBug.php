@@ -190,7 +190,7 @@ class dBug {
 		$var_ser = serialize($var);
 		array_push($this->arrHistory, $var_ser);
 
-		$this->makeTableHeader("array","array");
+		$this->makeTableHeader("array","array (size: ".sizeof($var).")");
 		if(is_array($var)) {
 			foreach($var as $key=>$value) {
 				$this->makeTDHeader("array",$key);
@@ -220,7 +220,7 @@ class dBug {
 	function varIsObject($var) {
 		$var_ser = serialize($var);
 		array_push($this->arrHistory, $var_ser);
-		$this->makeTableHeader("object","object");
+		$this->makeTableHeader("object","object .(".get_class($var).")");
 
 		if(is_object($var)) {
 			$arrObjVars=get_object_vars($var);
@@ -255,7 +255,7 @@ class dBug {
 
 	//if variable is a resource type
 	function varIsResource($var) {
-		$this->makeTableHeader("resourceC","resource",1);
+		$this->makeTableHeader("resourceC","resource (".get_resource_type($var).")",1);
 		echo "<tr>\n<td>\n";
 		switch(get_resource_type($var)) {
 			case "fbsql result":
