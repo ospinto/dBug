@@ -104,7 +104,7 @@ class dBug {
 			$code = $arrLines[($arrFile["line"]-1)];
 
 			//find call to dBug class
-			preg_match('/\bnew dBug\s*\(\s*(.+)\s*\);/i', $code, $arrMatches);
+			preg_match('/\bnew\s+(?:.*\\\\)?dBug\s*\(\s*(.+)\s*\);/i', $code, $arrMatches);
 
 			return $arrMatches[1];
 		}
