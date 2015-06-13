@@ -65,9 +65,17 @@ class dBug {
 	var $bCollapsed = false;
 	var $arrHistory = array();
 
-	//constructor
-	function dBug($var,$forceType="",$bCollapsed=false) {
-		//include js and css scripts
+	// maintain both styles of constructor for potential backwards compat issues?
+	public function __construct($var,$forceType="",$bCollapsed=false){
+		return $this->init($var,$forceType,$bCollapsed);
+	}
+
+	// TODO: bit the bullet and retire old-skool version
+	public function dBug($var,$forceType="",$bCollapsed=false){
+		return $this->init($var,$forceType,$bCollapsed);
+	}
+
+	private function init($var, $forceType, $bCollapsed) {
 		if(!defined('BDBUGINIT')) {
 			define("BDBUGINIT", TRUE);
 			$this->initJSandCSS();
@@ -104,7 +112,7 @@ class dBug {
 			$code = $arrLines[($arrFile["line"]-1)];
 
 			//find call to dBug class
-			preg_match('/\bnew dBug\s*\(\s*(.+)\s*\);/i', $code, $arrMatches);
+			preg_match('/\bnew\s+(?:.*\\\\)?dBug\s*\(\s*(.+)\s*\);/i', $code, $arrMatches);
 
 			return $arrMatches[1];
 		}
