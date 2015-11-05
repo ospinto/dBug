@@ -15,6 +15,10 @@ ini_set('display_errors', 1);
 	}
 	new dBug($a);
 	new myDBug($a);
+	new myDBug("test", "", true);
+	new dBug(
+		$a
+	);
 	
 	$a="The quick brown fox jumps over the lazy dog\nThe five boxing wizards jump quickly.\r\nСъешь же ещё этих мягких французских булок, да выпей чаю\n";
 	new dBug($a);
@@ -89,18 +93,20 @@ ini_set('display_errors', 1);
 	
 	//drawing Sierpinsky triangle
 	//http://php.net/manual/en/function.imagesetpixel.php
-	$x = 200;
-	$y = 200;
-	$img = imagecreatetruecolor($x, $y);
-	 
-	$corners[0] = array('x' => 100, 'y' =>  10);
-	$corners[1] = array('x' =>   0, 'y' => 190);
-	$corners[2] = array('x' => 200, 'y' => 190);
+	{
+		$x = 200;
+		$y = 200;
+		$img = imagecreatetruecolor($x, $y);
+		 
+		$corners[0] = array('x' => 100, 'y' =>  10);
+		$corners[1] = array('x' =>   0, 'y' => 190);
+		$corners[2] = array('x' => 200, 'y' => 190);
 
-	for ($i = 0; $i < 10000; $i++) {
-		$a = rand(0, 2);
-		imagesetpixel($img, round($x), round($y), imagecolorallocate($img, 255*$x/190, 255*(1-$y/190), 255*$a/2));
-		$x = ($x + $corners[$a]['x']) / 2;
-		$y = ($y + $corners[$a]['y']) / 2;
+		for ($i = 0; $i < 10000; $i++) {
+			$a = rand(0, 2);
+			imagesetpixel($img, round($x), round($y), imagecolorallocate($img, 255*$x/190, 255*(1-$y/190), 255*$a/2));
+			$x = ($x + $corners[$a]['x']) / 2;
+			$y = ($y + $corners[$a]['y']) / 2;
+		}
+		new dBug($img);
 	}
-	new dBug($img);

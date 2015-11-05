@@ -42,6 +42,7 @@ class dBug
 	public $bCollapsed = false;
 	public $arrHistory = array();
 	public static $embeddedStringMaxLength=50;
+	public $classRefl;
 
 	/*!
 		@param mixed $var Variable to dump
@@ -55,6 +56,8 @@ class dBug
 			define('BDBUGINIT', true);
 			static::initJSandCSS();
 		}
+		$this->classRefl = new \ReflectionClass(get_class($this));
+		
 		$arrAccept=array("array",'object',"xml"); //array of variable types that can be "forced"
 		$this->bCollapsed = $bCollapsed;
 		if(in_array($forceType, $arrAccept))
@@ -75,7 +78,7 @@ class dBug
 		for ($i=count($arrBacktrace)-1; $i>=0; $i--) {
 			$arrCurrent = $arrBacktrace[$i];
 			if(array_key_exists("function", $arrCurrent) &&
-				(in_array($arrCurrent["function"], $arrInclude) || (0 != strcasecmp($arrCurrent["function"], "dbug"))))
+				(in_array($arrCurrent["function"], $arrInclude) || (0 != strcasecmp($arrCurrent["function"], $this->classRefl->getConstructor()->getName()))))
 				continue;
 
 			$arrFile = $arrCurrent;
@@ -88,8 +91,7 @@ class dBug
 			$code = $arrLines[($arrFile["line"]-1)];
 
 			//find call to dBug class
-			preg_match('/\bnew dBug\s*\(\s*(.+)\s*\);/i', $code, $arrMatches);
-
+			preg_match('/\bnew\s+(?:'.preg_quote($this->classRefl->getNamespaceName()).'\\\\)?'.preg_quote($this->classRefl->getShortName()).'\s*\(\s*(.+)\s*\);/i', $code, $arrMatches);
 			return isset($arrMatches[1])?$arrMatches[1]:'[multiline]';
 		}
 
