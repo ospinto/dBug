@@ -132,7 +132,7 @@ class dBug
 	*/
 	public function renderTableHeader($type, $text, $colspan=0)
 	{
-		echo '<table cellspacing=2 cellpadding=3 class="dBug_'.$type.'">
+		echo '<table cellspacing=2 cellpadding=3 class="dBug dBug_' . $type . '">
 				<tr>
 					<td '.(($this->bCollapsed) ? 'style="font-style:italic" ' : '').'class="dBug_'.$type.'Header" '.($colspan?'colspan='.$colspan:'').' onClick="dBug_toggleTable(this)">'.$text.'</td>
 				</tr>';
