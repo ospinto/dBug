@@ -18,7 +18,7 @@
 	],
 	"require" : {
 		"php" : ">=5.3",
-		"ext-Reflection" : "to show protected and private info (now is only implemented for Exceptions) and to work with types in stack"
+		"ext-Reflection" : "*"
 	},
 	"support" : {
 		"issues" : "https://github.com/KOLANICH/dBug/issues"
