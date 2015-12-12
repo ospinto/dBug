@@ -17,6 +17,6 @@
         "php": ">=5.3.2"        
     },    
     "autoload": {
-        "psr-4": {"Ospinto\\dBug": "dBug.php"}
+        "psr-4": {"Ospinto\\dBug": "/"}
     }
 }
