@@ -11,6 +11,7 @@
 
 ### Twig Filter - https://github.com/sunra/dbug-twig-extension
 
+or
 
 ### Install via Composer.
 Class will be autoloaded.
