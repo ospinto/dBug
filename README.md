@@ -1,6 +1,14 @@
 # dBug
-- Updated for PSR-0 copmliance
+- Updated for PSR-4 copmliance
 - created composer package
+
+## NEW
+- Updated to version from August 6th, 2012 of Ospinto's code
+- move to psr-4
+
+## See also 
+*dBug Twig Filter* - https://github.com/sunra/dbug-twig-extension
+I love this way of use dBug
 
 
 ## Usage
