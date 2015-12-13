@@ -9,7 +9,7 @@
 
 ## Usage
 
-*I love use dBug via **Twig Filter** * - https://github.com/sunra/dbug-twig-extension
+I love use dBug via **Twig Filter** - https://github.com/sunra/dbug-twig-extension
 
 
 Install via Composer.
