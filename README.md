@@ -13,7 +13,7 @@
 
 or
 
-### Install via Composer.
+### Install via Composer - https://packagist.org/packages/sunra/dbug
 Class will be autoloaded.
 
 
