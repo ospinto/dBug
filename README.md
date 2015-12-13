@@ -6,12 +6,11 @@
 - Updated to version from August 6th, 2012 of Ospinto's code
 - move to psr-4
 
-## See also 
-*dBug Twig Filter* - https://github.com/sunra/dbug-twig-extension
-I love this way of use dBug
-
 
 ## Usage
+
+*I love use dBug via **Twig Filter** * - https://github.com/sunra/dbug-twig-extension
+
 
 Install via Composer.
 Class will be autoloaded.
