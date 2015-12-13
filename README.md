@@ -9,21 +9,21 @@
 
 ## Usage
 
-I love use dBug via **Twig Filter** - https://github.com/sunra/dbug-twig-extension
+### Twig Filter - https://github.com/sunra/dbug-twig-extension
 
 
-Install via Composer.
+### Install via Composer.
 Class will be autoloaded.
 
 
-### usage 
+#### usage 
 ``` php
 
    new \Ospinto\Dbug($myVariable);
 
 ```
 
-### Class arguments:
+#### Class arguments:
 
     __construct ($var,$forceType="",$bCollapsed=false, $var_name='')
 
