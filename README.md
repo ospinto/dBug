@@ -20,7 +20,7 @@ Class will be autoloaded.
 #### usage 
 ``` php
 
-   new \Ospinto\Dbug($myVariable);
+   new \Ospinto\dBug($myVariable);
 
 ```
 
