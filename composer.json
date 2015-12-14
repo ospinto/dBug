@@ -1,6 +1,6 @@
 {
     "name": "sunra/dbug",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "type": "library",
     "description": "Most beautiful variable dump library for PHP (ColdFusion like style)",
     "keywords": ["php","dump","debug"],
