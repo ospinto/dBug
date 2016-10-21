@@ -477,7 +477,7 @@ class DBug
 
     private function initJSandCSS()
     {
-        echo <<<SCRIPTS
+        echo <<<JAVASCRIPT
             <script language="JavaScript">
             /* code modified from ColdFusion's cfdump code */
                 function dBug_toggleRow(source) {
@@ -575,6 +575,6 @@ class DBug
                 table.dBug_xml td.dBug_xmlHeader { background-color:#AAAAAA; }
                 table.dBug_xml td.dBug_xmlKey { background-color:#DDDDDD; }
             </style>
-SCRIPTS;
+JAVASCRIPT;
     }
 }
