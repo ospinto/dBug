@@ -127,8 +127,8 @@ class dBug
 
         echo "<table cellspacing=2 cellpadding=3 class=\"dBug_".$type."\">
                 <tr>
-					<td ".$str_i."class=\"dBug_".$type."Header\" colspan=".$colspan." onClick='dBug_toggleTable(this)'>".$header."</td>
-				</tr>";
+                    <td ".$str_i."class=\"dBug_".$type."Header\" colspan=".$colspan." onClick='dBug_toggleTable(this)'>".$header."</td>
+                </tr>";
     }
 
     //create the table row header
@@ -136,8 +136,8 @@ class dBug
     {
         $str_d = ($this->bCollapsed) ? " style=\"display:none\"" : "";
         echo "<tr".$str_d.">
-				<td valign=\"top\" onClick='dBug_toggleRow(this)' class=\"dBug_".$type."Key\">".$header."</td>
-				<td>";
+                <td valign=\"top\" onClick='dBug_toggleRow(this)' class=\"dBug_".$type."Key\">".$header."</td>
+                <td>";
     }
 
     //close table row
