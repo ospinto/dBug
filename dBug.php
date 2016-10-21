@@ -477,104 +477,106 @@ class DBug
 
     private function initJSandCSS()
     {
+        echo "\n<script language=\"JavaScript\">\n";
         echo <<<JAVASCRIPT
-            <script language="JavaScript">
-            /* code modified from ColdFusion's cfdump code */
-                function dBug_toggleRow(source) {
-                    var target = (document.all) ? source.parentElement.cells[1] : source.parentNode.lastChild;
-                    dBug_toggleTarget(target,dBug_toggleSource(source));
-                }
+        /* code modified from ColdFusion's cfdump code */
+        function dBug_toggleRow(source) {
+            var target = (document.all) ? source.parentElement.cells[1] : source.parentNode.lastChild;
+            dBug_toggleTarget(target,dBug_toggleSource(source));
+        }
 
-                function dBug_toggleSource(source) {
-                    if (source.style.fontStyle=='italic') {
-                        source.style.fontStyle='normal';
-                        source.title='click to collapse';
-                        return 'open';
-                    } else {
-                        source.style.fontStyle='italic';
-                        source.title='click to expand';
-                        return 'closed';
+        function dBug_toggleSource(source) {
+            if (source.style.fontStyle=='italic') {
+                source.style.fontStyle='normal';
+                source.title='click to collapse';
+                return 'open';
+            } else {
+                source.style.fontStyle='italic';
+                source.title='click to expand';
+                return 'closed';
+            }
+        }
+
+        function dBug_toggleTarget(target,switchToState) {
+            target.style.display = (switchToState=='open') ? '' : 'none';
+        }
+
+        function dBug_toggleTable(source) {
+            var switchToState=dBug_toggleSource(source);
+            if(document.all) {
+                var table=source.parentElement.parentElement;
+                for(var i=1;i<table.rows.length;i++) {
+                    target=table.rows[i];
+                    dBug_toggleTarget(target,switchToState);
+                }
+            }
+            else {
+                var table=source.parentNode.parentNode;
+                for (var i=1;i<table.childNodes.length;i++) {
+                    target=table.childNodes[i];
+                    if(target.style) {
+                        dBug_toggleTarget(target,switchToState);
                     }
                 }
-
-                function dBug_toggleTarget(target,switchToState) {
-                    target.style.display = (switchToState=='open') ? '' : 'none';
-                }
-
-                function dBug_toggleTable(source) {
-                    var switchToState=dBug_toggleSource(source);
-                    if(document.all) {
-                        var table=source.parentElement.parentElement;
-                        for(var i=1;i<table.rows.length;i++) {
-                            target=table.rows[i];
-                            dBug_toggleTarget(target,switchToState);
-                        }
-                    }
-                    else {
-                        var table=source.parentNode.parentNode;
-                        for (var i=1;i<table.childNodes.length;i++) {
-                            target=table.childNodes[i];
-                            if(target.style) {
-                                dBug_toggleTarget(target,switchToState);
-                            }
-                        }
-                    }
-                }
-            </script>
-
-            <style type="text/css">
-                table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml
-                    { font-family:Verdana, Arial, Helvetica, sans-serif; color:#000000; font-size:12px; border-spacing:2px; display:table; border-collapse:separate; }
-
-                table.dBug_array td,
-                table.dBug_object td,
-                table.dBug_resource td,
-                table.dBug_resourceC td,
-                table.dBug_xml td
-                    { line-height:1.3; padding:3px; vertical-align:top; }
-
-                .dBug_arrayHeader,
-                .dBug_objectHeader,
-                .dBug_resourceHeader,
-                .dBug_resourceCHeader,
-                .dBug_xmlHeader
-                    { font-weight:bold; color:#FFFFFF; cursor:pointer; }
-
-                .dBug_arrayKey,
-                .dBug_objectKey,
-                .dBug_xmlKey
-                    { cursor:pointer; }
-
-                /* array */
-                table.dBug_array { background-color:#006600; }
-                table.dBug_array td { background-color:#FFFFFF; }
-                table.dBug_array td.dBug_arrayHeader { background-color:#009900; }
-                table.dBug_array td.dBug_arrayKey { background-color:#CCFFCC; }
-
-                /* object */
-                table.dBug_object { background-color:#0000CC; }
-                table.dBug_object td { background-color:#FFFFFF; }
-                table.dBug_object td.dBug_objectHeader { background-color:#4444CC; }
-                table.dBug_object td.dBug_objectKey { background-color:#CCDDFF; }
-
-                /* resource */
-                table.dBug_resourceC { background-color:#884488; }
-                table.dBug_resourceC td { background-color:#FFFFFF; }
-                table.dBug_resourceC td.dBug_resourceCHeader { background-color:#AA66AA; }
-                table.dBug_resourceC td.dBug_resourceCKey { background-color:#FFDDFF; }
-
-                /* resource */
-                table.dBug_resource { background-color:#884488; }
-                table.dBug_resource td { background-color:#FFFFFF; }
-                table.dBug_resource td.dBug_resourceHeader { background-color:#AA66AA; }
-                table.dBug_resource td.dBug_resourceKey { background-color:#FFDDFF; }
-
-                /* xml */
-                table.dBug_xml { background-color:#888888; }
-                table.dBug_xml td { background-color:#FFFFFF; }
-                table.dBug_xml td.dBug_xmlHeader { background-color:#AAAAAA; }
-                table.dBug_xml td.dBug_xmlKey { background-color:#DDDDDD; }
-            </style>
+            }
+        }
 JAVASCRIPT;
+
+        echo "\n</script>\n";
+        echo "\n<style type=\"text/css\">\n";
+        echo <<<CSS
+        table.dBug_array,table.dBug_object,table.dBug_resource,table.dBug_resourceC,table.dBug_xml
+            { font-family:Verdana, Arial, Helvetica, sans-serif; color:#000000; font-size:12px; border-spacing:2px; display:table; border-collapse:separate; }
+
+        table.dBug_array td,
+        table.dBug_object td,
+        table.dBug_resource td,
+        table.dBug_resourceC td,
+        table.dBug_xml td
+            { line-height:1.3; padding:3px; vertical-align:top; }
+
+        .dBug_arrayHeader,
+        .dBug_objectHeader,
+        .dBug_resourceHeader,
+        .dBug_resourceCHeader,
+        .dBug_xmlHeader
+            { font-weight:bold; color:#FFFFFF; cursor:pointer; }
+
+        .dBug_arrayKey,
+        .dBug_objectKey,
+        .dBug_xmlKey
+            { cursor:pointer; }
+
+        /* array */
+        table.dBug_array { background-color:#006600; }
+        table.dBug_array td { background-color:#FFFFFF; }
+        table.dBug_array td.dBug_arrayHeader { background-color:#009900; }
+        table.dBug_array td.dBug_arrayKey { background-color:#CCFFCC; }
+
+        /* object */
+        table.dBug_object { background-color:#0000CC; }
+        table.dBug_object td { background-color:#FFFFFF; }
+        table.dBug_object td.dBug_objectHeader { background-color:#4444CC; }
+        table.dBug_object td.dBug_objectKey { background-color:#CCDDFF; }
+
+        /* resource */
+        table.dBug_resourceC { background-color:#884488; }
+        table.dBug_resourceC td { background-color:#FFFFFF; }
+        table.dBug_resourceC td.dBug_resourceCHeader { background-color:#AA66AA; }
+        table.dBug_resourceC td.dBug_resourceCKey { background-color:#FFDDFF; }
+
+        /* resource */
+        table.dBug_resource { background-color:#884488; }
+        table.dBug_resource td { background-color:#FFFFFF; }
+        table.dBug_resource td.dBug_resourceHeader { background-color:#AA66AA; }
+        table.dBug_resource td.dBug_resourceKey { background-color:#FFDDFF; }
+
+        /* xml */
+        table.dBug_xml { background-color:#888888; }
+        table.dBug_xml td { background-color:#FFFFFF; }
+        table.dBug_xml td.dBug_xmlHeader { background-color:#AAAAAA; }
+        table.dBug_xml td.dBug_xmlKey { background-color:#DDDDDD; }
+CSS;
+        echo "\n</style>\n";
     }
 }
