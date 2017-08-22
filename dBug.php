@@ -66,7 +66,7 @@ class dBug {
 	var $arrHistory = array();
 
 	//constructor
-	function dBug($var,$forceType="",$bCollapsed=false, $reinit = false) {
+	function __construct($var,$forceType="",$bCollapsed=false, $reinit = false) {
 		//include js and css scripts
         if(!defined('BDBUGINIT') || $reinit) {
             if(!defined('BDBUGINIT')){
